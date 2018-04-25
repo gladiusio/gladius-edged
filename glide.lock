@@ -1,10 +1,10 @@
-hash: 93048bbaf77a78ca6d7a92e30857cbfb2d6c7b410d39cc345e7e4dde4deb9024
-updated: 2018-04-25T11:48:25.113957137-04:00
+hash: 09ded68582adbce6a828b133c828a1b5e3b35afe1798286fea584169dc74caec
+updated: 2018-04-25T14:23:00.822610218-04:00
 imports:
 - name: github.com/fsnotify/fsnotify
   version: c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9
 - name: github.com/gladiusio/gladius-utils
-  version: 047708745551eeec77cf7f844cd291ea5a472337
+  version: 6a70f207854741fe7181a23d290fc5af08682fd7
   subpackages:
   - config
   - init/manager
@@ -48,8 +48,6 @@ imports:
   - mem
 - name: github.com/spf13/cast
   version: 8965335b8c7107321228e3e3702cab9832751bac
-- name: github.com/spf13/cobra
-  version: a1f051bc3eba734da4772d60e2d677f47cf93ef4
 - name: github.com/spf13/jwalterweatherman
   version: 7c0cea34c8ece3fbeb2b27ab9b59511d360fb394
 - name: github.com/spf13/pflag
@@ -61,7 +59,7 @@ imports:
   subpackages:
   - fasthttputil
 - name: golang.org/x/sys
-  version: 3b87a42e500a6dc65dae1a55d0b641295971163e
+  version: 79b0c6888797020a994db17c8510466c72fe75d9
   subpackages:
   - unix
   - windows
@@ -74,8 +72,6 @@ imports:
   subpackages:
   - transform
   - unicode/norm
-- name: gopkg.in/AlecAivazis/survey.v1
-  version: e752db451e07e09c7d7dc8cada807a44bdb0fd47
 - name: gopkg.in/yaml.v2
   version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
 testImports: []

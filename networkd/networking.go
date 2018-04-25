@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/gladiusio/gladius-networkd/rpc-manager"
-	"github.com/spf13/viper"
+	"github.com/gladiusio/gladius-utils/config"
 
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"github.com/valyala/fasthttp"
@@ -78,7 +78,7 @@ func Run() {
 func getContentDir() (string, error) {
 	// TODO: Actually get correct filepath
 	// TODO: Add configurable values from a config file
-	contentDir := viper.GetString("ContentDirectory")
+	contentDir := config.GetString("ContentDirectory")
 	if contentDir == "" {
 		return contentDir, errors.New("No content directory specified")
 	}

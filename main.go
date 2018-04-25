@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/gladiusio/gladius-networkd/networkd"
 	"github.com/gladiusio/gladius-utils/init/manager"
 
-	"github.com/gladiusio/gladius-networkd/network-daemon"
 	"github.com/gladiusio/gladius-utils/config"
 )
 
@@ -11,7 +11,6 @@ import (
 func main() {
 	// Setup config handling
 	config.SetupConfig("gladius-networkd", config.NetworkDaemonDefaults())
-
 	// Define some variables
 	name, displayName, description :=
 		"GladiusNetworkDaemon",

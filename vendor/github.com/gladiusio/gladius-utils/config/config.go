@@ -10,6 +10,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+// GetString - Wrapper around viper GetString
+func GetString(key string) string {
+	return viper.GetString(key)
+}
+
 // SetupConfig - Sets up, watches, and registers default config
 func SetupConfig(configName string, defaults map[string]string) {
 	viper.SetConfigName(configName)
