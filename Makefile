@@ -40,7 +40,7 @@ GOTEST=go test
 ##
 
 # general make targets
-all: build-all
+all: networkd
 
 clean:
 	rm -rf ./build/*
@@ -57,7 +57,5 @@ release:
 test: $(NET_SRC)
 	$(GOTEST) $(NET_SRC)
 
-networkd: test-networkd
+networkd: test
 	$(GOBUILD) -o $(NET_DEST) $(NET_SRC)
-
-build-all: networkd
