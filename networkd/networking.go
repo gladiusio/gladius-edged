@@ -14,13 +14,31 @@ import (
 	"github.com/gladiusio/gladius-networkd/rpc-manager"
 	"github.com/gladiusio/gladius-utils/config"
 
+	"github.com/gladiusio/gladius-utils/init/manager"
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"github.com/valyala/fasthttp"
 )
 
+func SetupAndRun() {
+	// Define some variables
+	name, displayName, description :=
+		"GladiusNetworkDaemon",
+		"Gladius Network (Edge) Daemon",
+		"Gladius Network (Edge) Daemon"
+
+	// Run the function "run" in newtworkd as a service
+	manager.RunService(name, displayName, description, Run)
+}
+
 // Run - Start a web server
 func Run() {
 	fmt.Println("Starting...")
+
+	fmt.Println("Loading confg")
+
+	// Setup config handling
+	config.SetupConfig("gladius-networkd", config.NetworkDaemonDefaults())
+
 	// Get where the content is stored and load into memory
 	bundleMap := loadContentFromDisk()
 
