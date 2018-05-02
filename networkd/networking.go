@@ -12,9 +12,10 @@ import (
 	"strings"
 
 	"github.com/gladiusio/gladius-networkd/rpc-manager"
-	"github.com/gladiusio/gladius-utils/config"
 
+	"github.com/gladiusio/gladius-utils/config"
 	"github.com/gladiusio/gladius-utils/init/manager"
+
 	"github.com/powerman/rpc-codec/jsonrpc2"
 	"github.com/valyala/fasthttp"
 )
@@ -32,12 +33,12 @@ func SetupAndRun() {
 
 // Run - Start a web server
 func Run() {
-	fmt.Println("Starting...")
-
-	fmt.Println("Loading confg")
+	fmt.Println("Loading config")
 
 	// Setup config handling
 	config.SetupConfig("gladius-networkd", config.NetworkDaemonDefaults())
+
+	fmt.Println("Starting...")
 
 	// Get where the content is stored and load into memory
 	bundleMap := loadContentFromDisk()
