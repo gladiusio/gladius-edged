@@ -14,7 +14,7 @@
     "config",
     "init/manager"
   ]
-  revision = "6a70f207854741fe7181a23d290fc5af08682fd7"
+  revision = "336fe4bcf5b6cdffa399bd2ed49c7a51de0aa5cb"
 
 [[projects]]
   branch = "master"
@@ -46,26 +46,32 @@
   revision = "615a14ed75099c9eaac6949e22ac2341bf9d3197"
 
 [[projects]]
-  branch = "master"
   name = "github.com/klauspost/compress"
   packages = [
     "flate",
     "gzip",
     "zlib"
   ]
-  revision = "5fb1f31b0a61e9858f12f39266e059848a5f1cea"
+  revision = "6c8db69c4b49dd4df1fff66996cf556176d0b9bf"
+  version = "v1.2.1"
 
 [[projects]]
-  branch = "master"
   name = "github.com/klauspost/cpuid"
   packages = ["."]
-  revision = "e7e905edc00ea8827e58662220139109efea09db"
+  revision = "ae7887de9fa5d2db4eaa8174a7eff2c1ac00f2da"
+  version = "v1.1"
 
 [[projects]]
-  branch = "master"
+  name = "github.com/klauspost/crc32"
+  packages = ["."]
+  revision = "cb6bfca970f6908083f26f39a79009d608efd5cd"
+  version = "v1.1"
+
+[[projects]]
   name = "github.com/magiconair/properties"
   packages = ["."]
-  revision = "2c9e9502788518c97fe44e8955cd069417ee89df"
+  revision = "c3beff4c2358b44d0493c7dda585e7db7ff28ae6"
+  version = "v1.7.6"
 
 [[projects]]
   branch = "master"
@@ -74,10 +80,10 @@
   revision = "00c29f56e2386353d58c599509e8dc3801b0d716"
 
 [[projects]]
-  branch = "master"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
-  revision = "66540cf1fcd2c3aee6f6787dfa32a6ae9a870f12"
+  revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/powerman/rpc-codec"
@@ -138,10 +144,9 @@
     "windows/svc/eventlog",
     "windows/svc/mgr"
   ]
-  revision = "79b0c6888797020a994db17c8510466c72fe75d9"
+  revision = "78d5f264b493f125018180c204871ecf58a2dce1"
 
 [[projects]]
-  branch = "master"
   name = "golang.org/x/text"
   packages = [
     "internal/gen",
@@ -151,7 +156,8 @@
     "unicode/cldr",
     "unicode/norm"
   ]
-  revision = "7922cc490dd5a7dbaa7fd5d6196b49db59ac042f"
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
