@@ -82,10 +82,11 @@ func Run() {
 			if state {
 				lnContent, err = net.Listen("tcp", ":8080")
 				if err != nil {
-					panic(err)
+					log.Print("Server already running: " + err.Error())
+				} else {
+					go server.Serve(lnContent)
+					fmt.Println("Started HTTP server (from RPC command)")
 				}
-				go server.Serve(lnContent)
-				fmt.Println("Started HTTP server (from RPC command)")
 			} else {
 				lnContent.Close()
 				fmt.Println("Stopped HTTP server (from RPC command)")
