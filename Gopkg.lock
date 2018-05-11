@@ -14,7 +14,7 @@
     "config",
     "init/manager"
   ]
-  revision = "047e4b24375b3d36a52e3172700048b06b42fdf2"
+  revision = "d5cf0c0b1e5775e35da98d705f094cfe62244640"
 
 [[projects]]
   branch = "master"
