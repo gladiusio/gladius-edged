@@ -82,9 +82,9 @@ func Run() {
 			if state {
 				newContent, err := net.Listen("tcp", ":8080")
 				if err != nil {
-					log.Print("Server already running: " + err.Error())
-					lnContent = newContent
+					log.Print("Server already running so not starting")
 				} else {
+					lnContent = newContent
 					go server.Serve(lnContent)
 					fmt.Println("Started HTTP server (from RPC command)")
 				}
