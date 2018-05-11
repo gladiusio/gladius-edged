@@ -130,7 +130,7 @@ func loadContentFromDisk() map[string]map[string]string {
 			m[website] = make(map[string]string)
 			for _, contentFile := range contentFiles {
 				// Replace "%2f" with "/" and ".json" with ""
-				replacer := strings.NewReplacer("%2f", "/", "%2F", "/", ".json", "")
+				replacer := strings.NewReplacer("%2f", "/", "%2F", "/", ".html", "")
 				contentName := contentFile.Name()
 
 				// Create a route name for the mapping
@@ -156,6 +156,7 @@ func requestHandler(httpOut *rpcmanager.HTTPOut, bundleMap map[string]map[string
 	return func(ctx *fasthttp.RequestCtx) {
 		switch string(ctx.Path()) {
 		case "/content":
+			setupCORS(ctx)
 			contentHandler(ctx, bundleMap)
 			// TODO: Write stuff to pass back to httpOut
 		default:
@@ -169,7 +170,13 @@ func contentHandler(ctx *fasthttp.RequestCtx, bundleMap map[string]map[string]st
 	website := string(ctx.QueryArgs().Peek("website"))
 	route := string(ctx.QueryArgs().Peek("route"))
 
-	ctx.SetContentType("application/json")
 	ctx.SetStatusCode(fasthttp.StatusOK)
 	fmt.Fprintf(ctx, bundleMap[website][route])
+}
+
+func setupCORS(ctx *fasthttp.RequestCtx) {
+	ctx.Response.Header.Set("Access-Control-Allow-Credentials", "authorization")
+	ctx.Response.Header.Set("Access-Control-Allow-Headers", "HEAD,GET,POST,PUT,DELETE,OPTIONS")
+	ctx.Response.Header.Set("Access-Control-Allow-Methods", "*")
+	ctx.Response.Header.Set("Access-Control-Allow-Origin", "*")
 }

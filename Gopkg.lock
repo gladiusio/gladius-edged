@@ -14,7 +14,7 @@
     "config",
     "init/manager"
   ]
-  revision = "a7e8286a46b9305cbd5b8d8c7c6d1d501d8c6eb7"
+  revision = "f8b99a247e7fc125a0fe3e18aaa653017b167f07"
 
 [[projects]]
   branch = "master"
@@ -77,7 +77,7 @@
   branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
-  revision = "00c29f56e2386353d58c599509e8dc3801b0d716"
+  revision = "bb74f1db0675b241733089d5a1faa5dd8b0ef57b"
 
 [[projects]]
   name = "github.com/pelletier/go-toml"
@@ -144,7 +144,7 @@
     "windows/svc/eventlog",
     "windows/svc/mgr"
   ]
-  revision = "78d5f264b493f125018180c204871ecf58a2dce1"
+  revision = "9950ad118b73f9207b991f01920a3509c68f7f2b"
 
 [[projects]]
   name = "golang.org/x/text"
