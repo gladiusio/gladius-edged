@@ -80,9 +80,10 @@ func Run() {
 		select {
 		case state := <-(*rpcOut).HTTPState: // If it can be assigned to a variable
 			if state {
-				lnContent, err = net.Listen("tcp", ":8080")
+				newContent, err := net.Listen("tcp", ":8080")
 				if err != nil {
 					log.Print("Server already running: " + err.Error())
+					lnContent = newContent
 				} else {
 					go server.Serve(lnContent)
 					fmt.Println("Started HTTP server (from RPC command)")
