@@ -40,10 +40,11 @@ $ curl -H $HDR1 -H $HDR2 -d $MSG http://localhost:5000/rpc
 
 #### Set up content delivery
 
-Right now files are loaded from `~/.config/gladius/gladius-networkd/` and take
-the format of `example.com.json`. This functionality only works on linux right
+Right now files are loaded from `~/.config/gladius/content/<website>` and take
+the format of `%2froute%2fhere`. The `%2f` is used in place of `/`. This
+functionality only works on linux right
 now, and serving is not backwards compatible with the previous release. Content
-can then be accessed at `http://<host>:8080/content?website=example.com`
+can then be accessed at `http://<host>:8080/content?website=example.com&route=%2Ftest%2Ftest`
 
 ## Development
 ### Dependencies
