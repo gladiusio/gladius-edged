@@ -8,13 +8,13 @@
   version = "v1.4.7"
 
 [[projects]]
-  branch = "master"
   name = "github.com/gladiusio/gladius-utils"
   packages = [
     "config",
     "init/manager"
   ]
-  revision = "d5cf0c0b1e5775e35da98d705f094cfe62244640"
+  revision = "c180681cae880c0374426b40d2ef7cbf312fabbb"
+  version = "0.2.3"
 
 [[projects]]
   branch = "master"
@@ -70,8 +70,8 @@
 [[projects]]
   name = "github.com/magiconair/properties"
   packages = ["."]
-  revision = "c3beff4c2358b44d0493c7dda585e7db7ff28ae6"
-  version = "v1.7.6"
+  revision = "c2353362d570a7bfa228149c62842019201cfb71"
+  version = "v1.8.0"
 
 [[projects]]
   branch = "master"
@@ -144,7 +144,7 @@
     "windows/svc/eventlog",
     "windows/svc/mgr"
   ]
-  revision = "d0faeb539838e250bd0a9db4182d48d4a1915181"
+  revision = "7c87d13f8e835d2fb3a70a2912c811ed0c1d241b"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -168,6 +168,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1a36d9b38ee39294004cf5a533f531b3ab816a8258d8e0ec474b1e00122e9b1d"
+  inputs-digest = "30952dc98b85547214d9a8b88ed26e47475b510f8f231219c5b8973062e5dd8c"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -26,8 +26,8 @@
 
 
 [[constraint]]
-  branch = "master"
   name = "github.com/gladiusio/gladius-utils"
+  version = "0.2.3"
 
 [[constraint]]
   name = "github.com/powerman/rpc-codec"
