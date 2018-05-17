@@ -13,8 +13,8 @@
     "config",
     "init/manager"
   ]
-  revision = "3bf11b6b33d3d1e2dbf3fc85be195c93956683fd"
-  version = "0.2.4"
+  revision = "486e8052c24340c8b461ef7e407eaaf6b496d708"
+  version = "0.2.5"
 
 [[projects]]
   branch = "master"
