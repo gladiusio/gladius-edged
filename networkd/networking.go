@@ -1,16 +1,13 @@
 package networkd
 
 import (
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/rpc"
-	"path"
-	"strings"
 
+	"github.com/gladiusio/gladius-networkd/networkd/state"
 	"github.com/gladiusio/gladius-networkd/rpc-manager"
 
 	"github.com/gladiusio/gladius-utils/config"
@@ -40,8 +37,10 @@ func Run() {
 
 	fmt.Println("Starting...")
 
+	s := state.New()
+
 	// Get where the content is stored and load into memory
-	bundleMap := loadContentFromDisk()
+	bundleMap := s.Content()
 
 	// Create some strucs so we can pass info between goroutines
 	rpcOut := &rpcmanager.RPCOut{HTTPState: make(chan bool)}
@@ -94,61 +93,6 @@ func Run() {
 			}
 		}
 	}
-}
-
-func getContentDir() (string, error) {
-	// TODO: Actually get correct filepath
-	// TODO: Add configurable values from a config file
-	contentDir := config.GetString("ContentDirectory")
-	if contentDir == "" {
-		return contentDir, errors.New("No content directory specified")
-	}
-	return contentDir, nil
-}
-
-// Return a map of the json bundles on disk
-func loadContentFromDisk() map[string]map[string]string {
-	filePath, err := getContentDir()
-	if err != nil {
-		panic(err)
-	}
-
-	files, err := ioutil.ReadDir(filePath)
-	if err != nil {
-		log.Fatal("Error when reading content dir: ", err)
-	}
-
-	m := make(map[string]map[string]string)
-
-	for _, f := range files {
-		website := f.Name()
-		if f.IsDir() {
-			contentFiles, err := ioutil.ReadDir(path.Join(filePath, website))
-			if err != nil {
-				log.Fatal("Error when reading content dir: ", err)
-			}
-			fmt.Println("Loading website: " + website)
-			m[website] = make(map[string]string)
-			for _, contentFile := range contentFiles {
-				// Replace "%2f" with "/" and ".json" with ""
-				replacer := strings.NewReplacer("%2f", "/", "%2F", "/", ".html", "")
-				contentName := contentFile.Name()
-
-				// Create a route name for the mapping
-				routeName := replacer.Replace(contentName)
-
-				// Pull the file
-				b, err := ioutil.ReadFile(path.Join(filePath, website, contentName))
-				if err != nil {
-					log.Fatal(err)
-				}
-				fmt.Println("Loaded route: " + routeName)
-				m[website][routeName] = string(b)
-			}
-		}
-	}
-
-	return m
 }
 
 // Return a function like the one fasthttp is expecting
