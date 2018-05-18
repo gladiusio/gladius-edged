@@ -160,6 +160,9 @@ func requestHandler(httpOut *rpcmanager.HTTPOut, bundleMap map[string]map[string
 			setupCORS(ctx)
 			contentHandler(ctx, bundleMap)
 			// TODO: Write stuff to pass back to httpOut
+		case "/status":
+			setupCORS(ctx)
+			fmt.Fprintf(ctx, "Woah a status")
 		default:
 			ctx.Error("Unsupported path", fasthttp.StatusNotFound)
 		}
