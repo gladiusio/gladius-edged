@@ -1,8 +1,9 @@
+// Package state contains a thread safe state struct that stores information
+// about the networkd
 package state
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"path"
@@ -12,16 +13,18 @@ import (
 	"github.com/gladiusio/gladius-utils/config"
 )
 
+// New returns a new state struct
 func New() *State {
-	state := &State{running: true, content: make(map[string]map[string]string)}
+	state := &State{running: true, content: make(map[string]map[string]string), runChannel: make(chan bool)}
 	state.LoadContentFromDisk()
 	return state
 }
 
 type State struct {
-	running bool
-	content map[string]map[string]string
-	mux     sync.Mutex
+	running    bool
+	content    map[string]map[string]string
+	runChannel chan (bool)
+	mux        sync.Mutex
 }
 
 func (s *State) Content() map[string]map[string]string {
@@ -29,6 +32,25 @@ func (s *State) Content() map[string]map[string]string {
 	// Lock so only one goroutine at a time can access the map
 	defer s.mux.Unlock()
 	return s.content
+}
+
+func (s *State) SetContentRunState(runState bool) {
+	s.mux.Lock()
+	if s.running != runState {
+		s.running = runState
+		go func() { s.runChannel <- runState }()
+	}
+	s.mux.Unlock()
+}
+
+func (s *State) RunningStateChanged() chan (bool) {
+	return s.runChannel
+}
+
+func (s *State) ShouldBeRunning() bool {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	return s.running
 }
 
 // LoadContentFromDisk loads the content from the disk and stores it in the state
@@ -52,7 +74,7 @@ func (s *State) LoadContentFromDisk() {
 			if err != nil {
 				log.Fatal("Error when reading content dir: ", err)
 			}
-			fmt.Println("Loading website: " + website)
+			log.Print("Loading website: " + website)
 			m[website] = make(map[string]string)
 			for _, contentFile := range contentFiles {
 				// Replace "%2f" with "/" and ".json" with ""
@@ -67,7 +89,7 @@ func (s *State) LoadContentFromDisk() {
 				if err != nil {
 					log.Fatal(err)
 				}
-				fmt.Println("Loaded route: " + routeName)
+				log.Print("Loaded route: " + routeName)
 				m[website][routeName] = string(b)
 			}
 		}
