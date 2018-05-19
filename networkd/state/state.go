@@ -20,6 +20,7 @@ func New() *State {
 	return state
 }
 
+// State is a thread safe struct for keeping information about the networkd
 type State struct {
 	running    bool
 	content    map[string]map[string]string
@@ -27,6 +28,7 @@ type State struct {
 	mux        sync.Mutex
 }
 
+// Content gets the current content in ram
 func (s *State) Content() map[string]map[string]string {
 	s.mux.Lock()
 	// Lock so only one goroutine at a time can access the map
@@ -34,6 +36,7 @@ func (s *State) Content() map[string]map[string]string {
 	return s.content
 }
 
+// SetContentRunState updates the the desired state of the networking
 func (s *State) SetContentRunState(runState bool) {
 	s.mux.Lock()
 	if s.running != runState {
@@ -43,10 +46,13 @@ func (s *State) SetContentRunState(runState bool) {
 	s.mux.Unlock()
 }
 
+// RunningStateChanged returns a channel that updates when the running state is
+// changed
 func (s *State) RunningStateChanged() chan (bool) {
 	return s.runChannel
 }
 
+// ShouldBeRunning returns the current desired run state of the networking
 func (s *State) ShouldBeRunning() bool {
 	s.mux.Lock()
 	defer s.mux.Unlock()

@@ -11,6 +11,7 @@ import (
 	"github.com/gladiusio/gladius-utils/init/manager"
 )
 
+// SetupAndRun runs the networkd as a service
 func SetupAndRun() {
 	// Define some variables
 	name, displayName, description :=
