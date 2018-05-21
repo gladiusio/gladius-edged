@@ -1,12 +1,13 @@
 # Gladius Networkd
 
-The full suite of binaries for running a Gladius Node
+All of the code and resources for running a Gladius content daemon.
 
 ## Usage
 
 ### Run as a service
-You can also install networkd  as a service.
-*Attention:* The service implementation is not thoroughly tested, and may require root privileges.
+You can also install networkd  as a service, it will use the installing user's
+home folder for the file locations.
+
 ```shell
 # install networkd as a service
 gladius-networkd install
@@ -35,15 +36,13 @@ $ curl -H $HDR1 -H $HDR2 -d $MSG http://localhost:5000/rpc
 
 $ MSG='{"jsonrpc": "2.0", "method": "GladiusEdge.Status", "id": 1}'
 $ curl -H $HDR1 -H $HDR2 -d $MSG http://localhost:5000/rpc
-{"jsonrpc":"2.0","result":"Not implemented","id":1}
+{"jsonrpc":"2.0","result":"Server is <status>","id":1}
 ```
 
 #### Set up content delivery
 
-Right now files are loaded from `~/.config/gladius/content/<website>` and take
-the format of `%2froute%2fhere`. The `%2f` is used in place of `/`. This
-functionality only works on linux right
-now, and serving is not backwards compatible with the previous release. Content
+Right now files are loaded from `~/.config/gladius/content/<website>` on unix machines and `C:\Users\<user>\.gladius\content\<website>` and take
+the format of `%2froute%2fhere`. The `%2f` is used in place of `/`. Content
 can then be accessed at `http://<host>:8080/content?website=example.com&route=%2Ftest%2Ftest`
 
 ## Development
