@@ -57,7 +57,7 @@ func requestHandler(s *state.State) func(ctx *fasthttp.RequestCtx) {
 		switch string(ctx.Path()) {
 		case "/content":
 			setupCORS(ctx)
-			contentHandler(ctx, s.Content())
+			contentHandler(ctx, s)
 			// TODO: Write stuff to pass back to httpOut
 		case "/status":
 			setupCORS(ctx)
@@ -68,13 +68,13 @@ func requestHandler(s *state.State) func(ctx *fasthttp.RequestCtx) {
 	}
 }
 
-func contentHandler(ctx *fasthttp.RequestCtx, bundleMap map[string]map[string]string) {
+func contentHandler(ctx *fasthttp.RequestCtx, s *state.State) {
 	// URL format like /content?website=REQUESTED_SITE?route=test%2Ftest
 	website := string(ctx.QueryArgs().Peek("website"))
 	route := string(ctx.QueryArgs().Peek("route"))
 
 	ctx.SetStatusCode(fasthttp.StatusOK)
-	fmt.Fprintf(ctx, bundleMap[website][route])
+	fmt.Fprintf(ctx, s.Content(website, route))
 }
 
 func setupCORS(ctx *fasthttp.RequestCtx) {

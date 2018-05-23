@@ -29,11 +29,11 @@ type State struct {
 }
 
 // Content gets the current content in ram
-func (s *State) Content() map[string]map[string]string {
+func (s *State) Content(website, route string) string {
 	s.mux.Lock()
 	// Lock so only one goroutine at a time can access the map
 	defer s.mux.Unlock()
-	return s.content
+	return s.content[website][route]
 }
 
 // SetContentRunState updates the the desired state of the networking
