@@ -15,7 +15,7 @@ import (
 
 // New returns a new state struct
 func New() *State {
-	state := &State{running: true, content: make(map[string]map[string]string), runChannel: make(chan bool)}
+	state := &State{running: true, content: make(map[string]([2](map[string]string))), runChannel: make(chan bool)}
 	state.LoadContentFromDisk()
 	return state
 }
@@ -23,17 +23,24 @@ func New() *State {
 // State is a thread safe struct for keeping information about the networkd
 type State struct {
 	running    bool
-	content    map[string]map[string]string
+	content    map[string]([2](map[string]string))
 	runChannel chan (bool)
 	mux        sync.Mutex
 }
 
 // Content gets the current content in ram
-func (s *State) Content(website, route string) string {
+func (s *State) GetPage(website, route string) string {
 	s.mux.Lock()
 	// Lock so only one goroutine at a time can access the map
 	defer s.mux.Unlock()
-	return s.content[website][route]
+	return s.content[website][0][route]
+}
+
+func (s *State) GetAsset(website, asset string) string {
+	s.mux.Lock()
+	// Lock so only one goroutine at a time can access the map
+	defer s.mux.Unlock()
+	return s.content[website][1][asset]
 }
 
 // SetContentRunState updates the the desired state of the networking
@@ -71,32 +78,51 @@ func (s *State) LoadContentFromDisk() {
 		log.Fatal("Error when reading content dir: ", err)
 	}
 
-	m := make(map[string]map[string]string)
+	m := make(map[string]([2](map[string]string)))
 
 	for _, f := range files {
 		website := f.Name()
 		if f.IsDir() {
+			m[website] = [2]map[string]string{make(map[string]string), make(map[string]string)}
+
 			contentFiles, err := ioutil.ReadDir(path.Join(filePath, website))
 			if err != nil {
 				log.Fatal("Error when reading content dir: ", err)
 			}
 			log.Print("Loading website: " + website)
-			m[website] = make(map[string]string)
 			for _, contentFile := range contentFiles {
-				// Replace "%2f" with "/" and ".json" with ""
-				replacer := strings.NewReplacer("%2f", "/", "%2F", "/", ".html", "")
-				contentName := contentFile.Name()
+				if !contentFile.IsDir() {
+					// Replace "%2f" with "/"
+					replacer := strings.NewReplacer("%2f", "/", "%2F", "/")
+					contentName := contentFile.Name()
 
-				// Create a route name for the mapping
-				routeName := replacer.Replace(contentName)
+					// Create a route name for the mapping
+					routeName := replacer.Replace(contentName)
 
-				// Pull the file
-				b, err := ioutil.ReadFile(path.Join(filePath, website, contentName))
-				if err != nil {
-					log.Fatal(err)
+					// Pull the file
+					b, err := ioutil.ReadFile(path.Join(filePath, website, contentName))
+					if err != nil {
+						log.Fatal(err)
+					}
+					log.Print("Loaded route: " + routeName)
+					m[website][0][routeName] = string(b)
+				} else if contentFile.Name() == "assets" {
+					assets, err := ioutil.ReadDir(path.Join(filePath, website, "assets"))
+					if err != nil {
+						log.Fatal("Error when reading assets dir: ", err)
+					}
+					for _, asset := range assets {
+						if !asset.IsDir() {
+							// Pull the file
+							b, err := ioutil.ReadFile(path.Join(filePath, website, "assets", asset.Name()))
+							if err != nil {
+								log.Fatal(err)
+							}
+							log.Print("Loaded asset: " + asset.Name())
+							m[website][1][asset.Name()] = string(b)
+						}
+					}
 				}
-				log.Print("Loaded route: " + routeName)
-				m[website][routeName] = string(b)
 			}
 		}
 	}

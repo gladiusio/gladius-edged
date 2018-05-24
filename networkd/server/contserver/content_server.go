@@ -54,13 +54,11 @@ func (cs *ContentServer) Stop() {
 func requestHandler(s *state.State) func(ctx *fasthttp.RequestCtx) {
 	// The actual serving function
 	return func(ctx *fasthttp.RequestCtx) {
+		setupCORS(ctx)
 		switch string(ctx.Path()) {
 		case "/content":
-			setupCORS(ctx)
 			contentHandler(ctx, s)
-			// TODO: Write stuff to pass back to httpOut
 		case "/status":
-			setupCORS(ctx)
 			fmt.Fprintf(ctx, "Woah a status")
 		default:
 			ctx.Error("Unsupported path", fasthttp.StatusNotFound)
@@ -72,9 +70,15 @@ func contentHandler(ctx *fasthttp.RequestCtx, s *state.State) {
 	// URL format like /content?website=REQUESTED_SITE?route=test%2Ftest
 	website := string(ctx.QueryArgs().Peek("website"))
 	route := string(ctx.QueryArgs().Peek("route"))
+	asset := string(ctx.QueryArgs().Peek("asset"))
 
-	ctx.SetStatusCode(fasthttp.StatusOK)
-	fmt.Fprintf(ctx, s.Content(website, route))
+	if asset != "" {
+		ctx.SetStatusCode(fasthttp.StatusOK)
+		fmt.Fprintf(ctx, s.GetAsset(website, asset))
+	} else {
+		ctx.SetStatusCode(fasthttp.StatusOK)
+		fmt.Fprintf(ctx, s.GetPage(website, route))
+	}
 }
 
 func setupCORS(ctx *fasthttp.RequestCtx) {
