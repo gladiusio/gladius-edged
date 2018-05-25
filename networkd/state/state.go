@@ -3,6 +3,7 @@
 package state
 
 import (
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"log"
@@ -14,8 +15,8 @@ import (
 )
 
 // New returns a new state struct
-func New() *State {
-	state := &State{running: true, content: make(map[string]([2](map[string]string))), runChannel: make(chan bool)}
+func New(version string) *State {
+	state := &State{running: true, content: make(map[string]([2](map[string]string))), runChannel: make(chan bool), version: version}
 	state.LoadContentFromDisk()
 	return state
 }
@@ -25,7 +26,13 @@ type State struct {
 	running    bool
 	content    map[string]([2](map[string]string))
 	runChannel chan (bool)
+	version    string
 	mux        sync.Mutex
+}
+
+type status struct {
+	Running bool
+	Version string
 }
 
 // Content gets the current content in ram
@@ -57,6 +64,16 @@ func (s *State) SetContentRunState(runState bool) {
 // changed
 func (s *State) RunningStateChanged() chan (bool) {
 	return s.runChannel
+}
+
+func (s *State) Info() string {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	status := &status{Running: s.running, Version: s.version}
+
+	jsonString, _ := json.Marshal(status)
+	return string(jsonString)
 }
 
 // ShouldBeRunning returns the current desired run state of the networking

@@ -59,7 +59,7 @@ func requestHandler(s *state.State) func(ctx *fasthttp.RequestCtx) {
 		case "/content":
 			contentHandler(ctx, s)
 		case "/status":
-			fmt.Fprintf(ctx, "Woah a status")
+			fmt.Fprintf(ctx, s.Info())
 		default:
 			ctx.Error("Unsupported path", fasthttp.StatusNotFound)
 		}

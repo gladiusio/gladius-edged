@@ -33,7 +33,7 @@ func Run() {
 	fmt.Println("Starting...")
 
 	// Create new thread safe state of the networkd
-	s := state.New()
+	s := state.New("0.3.0")
 
 	// Create a content server
 	cs := contserver.New(s)
