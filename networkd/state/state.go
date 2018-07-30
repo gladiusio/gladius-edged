@@ -16,7 +16,7 @@ import (
 
 // New returns a new state struct
 func New(version string) *State {
-	state := &State{running: true, content: make(map[string]([2](map[string]string))), runChannel: make(chan bool), version: version}
+	state := &State{running: true, content: make(map[string]([2](map[string][]byte))), runChannel: make(chan bool), version: version}
 	state.LoadContentFromDisk()
 	return state
 }
@@ -24,7 +24,7 @@ func New(version string) *State {
 // State is a thread safe struct for keeping information about the networkd
 type State struct {
 	running    bool
-	content    map[string]([2](map[string]string))
+	content    map[string]([2](map[string][]byte))
 	runChannel chan (bool)
 	version    string
 	mux        sync.Mutex
@@ -36,14 +36,14 @@ type status struct {
 }
 
 // Content gets the current content in ram
-func (s *State) GetPage(website, route string) string {
+func (s *State) GetPage(website, route string) []byte {
 	s.mux.Lock()
 	// Lock so only one goroutine at a time can access the map
 	defer s.mux.Unlock()
 	return s.content[website][0][route]
 }
 
-func (s *State) GetAsset(website, asset string) string {
+func (s *State) GetAsset(website, asset string) []byte {
 	s.mux.Lock()
 	// Lock so only one goroutine at a time can access the map
 	defer s.mux.Unlock()
@@ -94,13 +94,13 @@ func (s *State) LoadContentFromDisk() {
 	if err != nil {
 		log.Fatal("Error when reading content dir: ", err)
 	}
-
-	m := make(map[string]([2](map[string]string)))
+	// map websites
+	m := make(map[string]([2](map[string][]byte)))
 
 	for _, f := range files {
 		website := f.Name()
-		if f.IsDir() {
-			m[website] = [2]map[string]string{make(map[string]string), make(map[string]string)}
+		if f.IsDir() { /* content */ /* assets */
+			m[website] = [2]map[string][]byte{make(map[string][]byte), make(map[string][]byte)}
 
 			contentFiles, err := ioutil.ReadDir(path.Join(filePath, website))
 			if err != nil {
@@ -122,7 +122,7 @@ func (s *State) LoadContentFromDisk() {
 						log.Fatal(err)
 					}
 					log.Print("Loaded route: " + routeName)
-					m[website][0][routeName] = string(b)
+					m[website][0][routeName] = []byte(b)
 				} else if contentFile.Name() == "assets" {
 					assets, err := ioutil.ReadDir(path.Join(filePath, website, "assets"))
 					if err != nil {
@@ -136,7 +136,7 @@ func (s *State) LoadContentFromDisk() {
 								log.Fatal(err)
 							}
 							log.Print("Loaded asset: " + asset.Name())
-							m[website][1][asset.Name()] = string(b)
+							m[website][1][asset.Name()] = []byte(b)
 						}
 					}
 				}
