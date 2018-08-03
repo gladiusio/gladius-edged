@@ -18,6 +18,7 @@ import (
 func New(version string) *State {
 	state := &State{running: true, content: make(map[string]([2](map[string][]byte))), runChannel: make(chan bool), version: version}
 	state.LoadContentFromDisk()
+	state.
 	return state
 }
 
@@ -108,6 +109,7 @@ func (s *State) LoadContentFromDisk() {
 			}
 			log.Print("Loading website: " + website)
 			for _, contentFile := range contentFiles {
+				// HTML for the page
 				if !contentFile.IsDir() {
 					// Replace "%2f" with "/"
 					replacer := strings.NewReplacer("%2f", "/", "%2F", "/")
@@ -123,6 +125,8 @@ func (s *State) LoadContentFromDisk() {
 					}
 					log.Print("Loaded route: " + routeName)
 					m[website][0][routeName] = []byte(b)
+
+					// All of the assets for the site
 				} else if contentFile.Name() == "assets" {
 					assets, err := ioutil.ReadDir(path.Join(filePath, website, "assets"))
 					if err != nil {
@@ -146,6 +150,10 @@ func (s *State) LoadContentFromDisk() {
 	s.mux.Lock()
 	s.content = m
 	s.mux.Unlock()
+}
+
+func (s *State) SyncContentFromPool() {
+
 }
 
 func getContentDir() (string, error) {
