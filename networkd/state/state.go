@@ -187,7 +187,6 @@ func (s *State) startContentSyncWatcher() {
 					downloadFile(toDownload, contentURL)
 				}
 				s.loadContentFromDisk()
-
 			}
 		}
 	}()
