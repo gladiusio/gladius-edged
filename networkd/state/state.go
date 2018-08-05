@@ -250,8 +250,6 @@ func (s *State) getContentList() []string {
 }
 
 func getContentDir() (string, error) {
-	// TODO: Actually get correct filepath
-	// TODO: Add configurable values from a config file
 	contentDir := config.GetString("ContentDirectory")
 	if contentDir == "" {
 		return contentDir, errors.New("No content directory specified")
