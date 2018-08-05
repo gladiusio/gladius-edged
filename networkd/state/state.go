@@ -186,6 +186,8 @@ func (s *State) startContentSyncWatcher() {
 					toDownload := filepath.Join(append([]string{contentDir}, strings.Split(contentName, "/")...)...)
 					downloadFile(toDownload, contentURL)
 				}
+				s.loadContentFromDisk()
+
 			}
 		}
 	}()
