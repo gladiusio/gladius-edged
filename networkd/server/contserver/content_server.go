@@ -74,10 +74,10 @@ func contentHandler(ctx *fasthttp.RequestCtx, s *state.State) {
 
 	if asset != "" {
 		ctx.SetStatusCode(fasthttp.StatusOK)
-		fmt.Fprintf(ctx, s.GetAsset(website, asset))
+		ctx.Write(s.GetAsset(website, asset))
 	} else {
 		ctx.SetStatusCode(fasthttp.StatusOK)
-		fmt.Fprintf(ctx, s.GetPage(website, route))
+		ctx.Write(s.GetPage(website, route))
 	}
 }
 
