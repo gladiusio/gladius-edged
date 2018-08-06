@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/buger/jsonparser"
+  packages = ["."]
+  revision = "2cac668e8456b4284edb0715e17e2af02d3ec993"
+
+[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
@@ -13,8 +19,8 @@
     "config",
     "init/manager"
   ]
-  revision = "486e8052c24340c8b461ef7e407eaaf6b496d708"
-  version = "0.2.5"
+  revision = "449be56d3f2c5a3f00bb8ba9c409fe3e8f47f05d"
+  version = "0.3.2"
 
 [[projects]]
   branch = "master"
@@ -32,6 +38,12 @@
     "json/token"
   ]
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
+
+[[projects]]
+  name = "github.com/jpillora/backoff"
+  packages = ["."]
+  revision = "8eab2debe79d12b7bd3d10653910df25fa9552ba"
+  version = "1.0.0"
 
 [[projects]]
   branch = "master"
@@ -86,6 +98,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/rdegges/go-ipify"
+  packages = ["."]
+  revision = "2d94a6a86c4055118cc30fae2aaed47ec01f2210"
+
+[[projects]]
   name = "github.com/spf13/afero"
   packages = [
     ".",
@@ -138,7 +156,7 @@
     "windows/svc/eventlog",
     "windows/svc/mgr"
   ]
-  revision = "0ffbfd41fbef8ffcf9b62b0b0aa3a5873ed7a4fe"
+  revision = "34b17bdb430002e9db9ae7ddc8480b9fa05edc22"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -162,6 +180,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "30952dc98b85547214d9a8b88ed26e47475b510f8f231219c5b8973062e5dd8c"
+  inputs-digest = "1d2711b368ee9e4ab5d28c8dff7dfa869ced2649457590548aa01e5e62eb4461"
   solver-name = "gps-cdcl"
   solver-version = 1

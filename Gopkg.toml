@@ -27,7 +27,7 @@
 
 [[constraint]]
   name = "github.com/gladiusio/gladius-utils"
-  version = "~0.2.3"
+  version = "~0.3.1"
 
 [[constraint]]
   name = "github.com/powerman/rpc-codec"
@@ -40,3 +40,7 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/rdegges/go-ipify"
