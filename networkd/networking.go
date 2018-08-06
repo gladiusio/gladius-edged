@@ -69,12 +69,12 @@ func Run() {
 }
 
 func connectToP2P(ip string) {
-	controldBase := config.GetString("ControldProtocol") + ":" + config.GetString("ControldPort") + "/" + config.GetString("ControldHostname")
-
+	controldBase := config.GetString("ControldProtocol") + "://" + config.GetString("ControldHostname") + ":" + config.GetString("ControldPort") + "/api/p2p"
 	// Join the p2p network and handle any failures
 	joinString := []byte(`{"ip":"` + ip + `"}`)
 	resp, err := http.Post(controldBase+"/network/join", "application/json", bytes.NewBuffer(joinString))
 	if err != nil {
+		fmt.Println(err)
 		time.Sleep(1 * time.Second)
 		go connectToP2P(ip)
 		return
@@ -82,6 +82,7 @@ func connectToP2P(ip string) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	success, err := jsonparser.GetBoolean(body, "success")
 	if !success || err != nil {
+		fmt.Println(controldBase + "/network/join")
 		time.Sleep(1 * time.Second)
 		go connectToP2P(ip)
 		return
@@ -95,6 +96,7 @@ func connectToP2P(ip string) {
 	ipString := []byte(`{"message": {"node": {"ip_address": "` + myIP + `"}}}`)
 	resp, err = http.Post(controldBase+"/message/sign", "application/json", bytes.NewBuffer(ipString))
 	if err != nil {
+		fmt.Println("error signing")
 		time.Sleep(1 * time.Second)
 		go connectToP2P(ip)
 		return
@@ -102,6 +104,7 @@ func connectToP2P(ip string) {
 	body, _ = ioutil.ReadAll(resp.Body)
 	success, err = jsonparser.GetBoolean(body, "success")
 	if !success || err != nil {
+		fmt.Println("error signing2")
 		time.Sleep(1 * time.Second)
 		go connectToP2P(ip)
 		return
@@ -116,6 +119,7 @@ func connectToP2P(ip string) {
 	// Send the signed message to the p2p network introducing ourselves
 	resp, err = http.Post(controldBase+"/state/push_message", "application/json", bytes.NewBuffer(signedMessageBytes))
 	if err != nil {
+		fmt.Println("error pushing")
 		time.Sleep(1 * time.Second)
 		go connectToP2P(ip)
 		return
@@ -124,6 +128,7 @@ func connectToP2P(ip string) {
 	body, _ = ioutil.ReadAll(resp.Body)
 	success, err = jsonparser.GetBoolean(body, "success")
 	if !success || err != nil {
+		fmt.Println("error pushing2")
 		time.Sleep(1 * time.Second)
 		go connectToP2P(ip)
 		return
