@@ -43,6 +43,7 @@ func Run() {
 	s := state.New("0.3.0")
 
 	// Start up p2p connection
+	// TODO: Get from the blockchain
 	go connectToP2P(config.GetString("P2PSeedNodeAddress"))
 
 	// Create a content server
@@ -89,7 +90,7 @@ func connectToP2P(ip string) {
 	// Tell the network our IP and handle any failures
 	myIP, err := ipify.GetIp()
 	if err != nil {
-		fmt.Println("Couldn't get my IP address:", err)
+		fmt.Println("Couldn't get the public IP address:", err)
 	}
 	ipString := []byte(`{"message": {"node": {"ip_address": "` + myIP + `"}}}`)
 	resp, err = http.Post(controldBase+"/message/sign", "application/json", bytes.NewBuffer(ipString))
