@@ -74,7 +74,6 @@ func connectToP2P(ip string) {
 	joinString := []byte(`{"ip":"` + ip + `"}`)
 	resp, err := http.Post(controldBase+"/network/join", "application/json", bytes.NewBuffer(joinString))
 	if err != nil {
-		fmt.Println(err)
 		time.Sleep(1 * time.Second)
 		go connectToP2P(ip)
 		return
@@ -82,7 +81,6 @@ func connectToP2P(ip string) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	success, err := jsonparser.GetBoolean(body, "success")
 	if !success || err != nil {
-		fmt.Println(controldBase + "/network/join")
 		time.Sleep(1 * time.Second)
 		go connectToP2P(ip)
 		return
