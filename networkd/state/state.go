@@ -56,22 +56,6 @@ func (s *State) GetAsset(website, asset string) []byte {
 	return s.content[website][1][asset]
 }
 
-// SetContentRunState updates the the desired state of the networking
-func (s *State) SetContentRunState(runState bool) {
-	s.mux.Lock()
-	if s.running != runState {
-		s.running = runState
-		go func() { s.runChannel <- runState }()
-	}
-	s.mux.Unlock()
-}
-
-// RunningStateChanged returns a channel that updates when the running state is
-// changed
-func (s *State) RunningStateChanged() chan (bool) {
-	return s.runChannel
-}
-
 func (s *State) Info() string {
 	s.mux.Lock()
 	defer s.mux.Unlock()
@@ -80,13 +64,6 @@ func (s *State) Info() string {
 
 	jsonString, _ := json.Marshal(status)
 	return string(jsonString)
-}
-
-// ShouldBeRunning returns the current desired run state of the networking
-func (s *State) ShouldBeRunning() bool {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-	return s.running
 }
 
 // LoadContentFromDisk loads the content from the disk and stores it in the state
@@ -162,8 +139,8 @@ func (s *State) startContentSyncWatcher() {
 	s.loadContentFromDisk()
 
 	/* If there is new content we need, sleep for a random time then ask which
-	nodes have it in the network, then download it. This allows a semi random
-	propogation so we can minimize individal load on nodes.*/
+	nodes have it in the network, then download it from a random one. This allows
+	a semi random	propogation so we can minimize individal load on nodes.*/
 	go func() {
 		for {
 			time.Sleep(2 * time.Second)       // Sleep to give the controld a break
@@ -224,6 +201,7 @@ func getNeededFromControld(contentOnDisk []string) []string {
 	return []string{}
 }
 
+// getContentLocationsFromControld gets a list of lists to the links of files
 func getContentLocationsFromControld(contentNeeded []string) []([]string) {
 	return [][]string{[]string{}}
 }
