@@ -1,15 +1,9 @@
 package networkd
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"time"
 
-	"github.com/buger/jsonparser"
-	"github.com/rdegges/go-ipify"
-
+	"github.com/gladiusio/gladius-networkd/networkd/p2p/handler"
 	"github.com/gladiusio/gladius-networkd/networkd/server/contserver"
 	"github.com/gladiusio/gladius-networkd/networkd/state"
 
@@ -41,78 +35,19 @@ func Run() {
 	// Create new thread safe state of the networkd
 	s := state.New("0.3.0")
 
-	// Start up p2p connection
-	// TODO: Get from the blockchain
-	go connectToP2P(config.GetString("P2PSeedNodeAddress"))
-
 	// Create a content server
 	cs := contserver.New(s)
 	cs.Start()
 	defer cs.Stop()
 
+	// Create a p2p handler
+	controldBase := config.GetString("ControldProtocol") + "://" + config.GetString("ControldHostname") + ":" + config.GetString("ControldPort") + "/api/p2p"
+	// TODO: Get seed node from the blockchain
+	p2pHandler := handler.New(controldBase, config.GetString("P2PSeedNodeAddress"))
+	p2pHandler.Connect()
+
 	fmt.Println("Started HTTP server.")
 
 	// Block forever
 	select {}
-}
-
-func connectToP2P(ip string) {
-	controldBase := config.GetString("ControldProtocol") + "://" + config.GetString("ControldHostname") + ":" + config.GetString("ControldPort") + "/api/p2p"
-	// Join the p2p network and handle any failures
-	joinString := []byte(`{"ip":"` + ip + `"}`)
-	resp, err := http.Post(controldBase+"/network/join", "application/json", bytes.NewBuffer(joinString))
-	if err != nil {
-		time.Sleep(1 * time.Second)
-		go connectToP2P(ip)
-		return
-	}
-	body, _ := ioutil.ReadAll(resp.Body)
-	success, err := jsonparser.GetBoolean(body, "success")
-	if !success || err != nil {
-		time.Sleep(1 * time.Second)
-		go connectToP2P(ip)
-		return
-	}
-
-	// Tell the network our IP and handle any failures
-	myIP, err := ipify.GetIp()
-	if err != nil {
-		fmt.Println("Couldn't get the public IP address:", err)
-	}
-	ipString := []byte(`{"message": {"node": {"ip_address": "` + myIP + `"}}}`)
-	resp, err = http.Post(controldBase+"/message/sign", "application/json", bytes.NewBuffer(ipString))
-	if err != nil {
-		time.Sleep(1 * time.Second)
-		go connectToP2P(ip)
-		return
-	}
-	body, _ = ioutil.ReadAll(resp.Body)
-	success, err = jsonparser.GetBoolean(body, "success")
-	if !success || err != nil {
-		time.Sleep(1 * time.Second)
-		go connectToP2P(ip)
-		return
-	}
-
-	// Get the signed message
-	signedMessageBytes, _, _, err := jsonparser.Get(body, "response")
-	if err != nil {
-		return
-	}
-
-	// Send the signed message to the p2p network introducing ourselves
-	resp, err = http.Post(controldBase+"/state/push_message", "application/json", bytes.NewBuffer(signedMessageBytes))
-	if err != nil {
-		time.Sleep(1 * time.Second)
-		go connectToP2P(ip)
-		return
-	}
-
-	body, _ = ioutil.ReadAll(resp.Body)
-	success, err = jsonparser.GetBoolean(body, "success")
-	if !success || err != nil {
-		time.Sleep(1 * time.Second)
-		go connectToP2P(ip)
-		return
-	}
 }
