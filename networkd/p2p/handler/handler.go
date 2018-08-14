@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -96,6 +97,26 @@ func (p2p *P2PHandler) startHearbeat() {
 }
 
 // UpdateField updates the specified node field with the value
-func (p2p *P2PHandler) UpdateField(key, value string) {
+func (p2p *P2PHandler) UpdateField(key, value string) error {
+	updateString := `{"message": {"node": {"` + key + `": "` + value + `"}}}`
+	resp, err := p2p.post("/message/sign", updateString)
+	success, body := getSuccess(resp, err)
+	if !success {
+		return errors.New("Couldn't sign message with contorld, wallet could be locked")
+	}
 
+	// Get the signed message
+	signedMessageBytes, _, _, err := jsonparser.Get(body, "response")
+	if err != nil {
+		return errors.New("Controld returned a corrupted message")
+	}
+
+	// Send the signed message to the p2p network introducing ourselves
+	resp, err = p2p.post("/state/push_message", string(signedMessageBytes))
+	success, _ = getSuccess(resp, err)
+	if !success {
+		return errors.New("Couldn't push message")
+	}
+
+	return nil
 }
