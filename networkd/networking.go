@@ -11,7 +11,6 @@ import (
 	"github.com/rdegges/go-ipify"
 
 	"github.com/gladiusio/gladius-networkd/networkd/server/contserver"
-	"github.com/gladiusio/gladius-networkd/networkd/server/rpcserver"
 	"github.com/gladiusio/gladius-networkd/networkd/state"
 
 	"github.com/gladiusio/gladius-utils/config"
@@ -48,25 +47,13 @@ func Run() {
 
 	// Create a content server
 	cs := contserver.New(s)
+	cs.Start()
 	defer cs.Stop()
 
-	// Create an rpc server
-	rpc := rpcserver.New(s)
-	defer rpc.Stop()
+	fmt.Println("Started HTTP server.")
 
-	fmt.Println("Started RPC server and HTTP server.")
-
-	// Forever check through the channels on the main thread
-	for {
-		select {
-		case runState := <-s.RunningStateChanged(): // If it can be assigned to a variable
-			if runState {
-				cs.Start()
-			} else {
-				cs.Stop()
-			}
-		}
-	}
+	// Block forever
+	select {}
 }
 
 func connectToP2P(ip string) {
