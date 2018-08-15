@@ -185,6 +185,7 @@ func downloadFile(filepath, url, name string) error {
 	if err != nil {
 		return err
 	}
+	defer out.Close()
 
 	// Get the data
 	resp, err := http.Get(url)
@@ -211,7 +212,6 @@ func downloadFile(filepath, url, name string) error {
 		return errors.New("incomming file from peer did not match expected hash")
 	}
 
-	out.Close()
 	return nil
 }
 
