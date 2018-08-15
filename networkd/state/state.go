@@ -3,8 +3,10 @@
 package state
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -151,17 +153,23 @@ func (s *State) startContentSyncWatcher() {
 				r := rand.New(rand.NewSource(time.Now().Unix()))
 				time.Sleep(time.Duration(r.Intn(10)) * time.Second) // Random sleep allow better propogation
 
-				for _, contentData := range getContentLocationsFromControld(contentNeeded) {
-					contentURL := contentData[0]
-					contentName := contentData[1]
+				for _, nc := range getContentLocationsFromControld(contentNeeded) {
+					contentLocations := nc.contentLocations
+					contentName := nc.contentName
 
 					contentDir, err := getContentDir()
 					if err != nil {
 						log.Println("Can't find content dir")
+						return
 					}
+
+					contentURL := contentLocations[r.Intn(len(contentLocations))]
+
 					// Create a filepath location from the content name
 					toDownload := filepath.Join(append([]string{contentDir}, strings.Split(contentName, "/")...)...)
-					downloadFile(toDownload, contentURL)
+
+					// Pass in the name so we can verify the hash (filename is the hash)
+					downloadFile(toDownload, contentURL, contentName)
 				}
 				s.loadContentFromDisk()
 			}
@@ -171,14 +179,12 @@ func (s *State) startContentSyncWatcher() {
 
 // downloadFile will download a url to a local file. It's efficient because it will
 // write as it downloads and not load the whole file into memory.
-func downloadFile(filepath string, url string) error {
-
+func downloadFile(filepath, url, name string) error {
 	// Create the file
 	out, err := os.Create(filepath)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
 
 	// Get the data
 	resp, err := http.Get(url)
@@ -193,7 +199,25 @@ func downloadFile(filepath string, url string) error {
 		return err
 	}
 
+	// Check the hash of the file
+	h := sha256.New()
+	if _, err := io.Copy(h, out); err != nil {
+		log.Fatal(err)
+	}
+
+	if fmt.Sprintf("%x", h.Sum(nil)) != name {
+		out.Close()
+		os.Remove(filepath)
+		return errors.New("incomming file from peer did not match expected hash")
+	}
+
+	out.Close()
 	return nil
+}
+
+type networkContent struct {
+	contentName      string
+	contentLocations []string
 }
 
 // getNeededFromControld asks the controld what we need
@@ -202,8 +226,8 @@ func getNeededFromControld(contentOnDisk []string) []string {
 }
 
 // getContentLocationsFromControld gets a list of lists to the links of files
-func getContentLocationsFromControld(contentNeeded []string) []([]string) {
-	return [][]string{[]string{}}
+func getContentLocationsFromControld(contentNeeded []string) []*networkContent {
+	return []*networkContent{&networkContent{}}
 }
 
 // getContentList returns a list of the content we have on disk in the format of:
