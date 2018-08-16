@@ -3,8 +3,11 @@
 package state
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -17,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/buger/jsonparser"
 	"github.com/gladiusio/gladius-utils/config"
 )
 
@@ -89,7 +93,6 @@ func (s *State) loadContentFromDisk() {
 			if err != nil {
 				log.Fatal("Error when reading content dir: ", err)
 			}
-			log.Print("Loading website: " + website)
 			for _, contentFile := range contentFiles {
 				// HTML for the page
 				if !contentFile.IsDir() {
@@ -105,7 +108,6 @@ func (s *State) loadContentFromDisk() {
 					if err != nil {
 						log.Fatal(err)
 					}
-					log.Print("Loaded route: " + routeName)
 					m[website][0][routeName] = []byte(b)
 
 					// All of the assets for the site
@@ -121,7 +123,6 @@ func (s *State) loadContentFromDisk() {
 							if err != nil {
 								log.Fatal(err)
 							}
-							log.Print("Loaded asset: " + asset.Name())
 							m[website][1][asset.Name()] = []byte(b)
 						}
 					}
@@ -151,17 +152,23 @@ func (s *State) startContentSyncWatcher() {
 				r := rand.New(rand.NewSource(time.Now().Unix()))
 				time.Sleep(time.Duration(r.Intn(10)) * time.Second) // Random sleep allow better propogation
 
-				for _, contentData := range getContentLocationsFromControld(contentNeeded) {
-					contentURL := contentData[0]
-					contentName := contentData[1]
+				for _, nc := range getContentLocationsFromControld(contentNeeded) {
+					contentLocations := nc.contentLocations
+					contentName := nc.contentName
 
 					contentDir, err := getContentDir()
 					if err != nil {
 						log.Println("Can't find content dir")
+						return
 					}
+
+					contentURL := contentLocations[r.Intn(len(contentLocations))]
+
 					// Create a filepath location from the content name
 					toDownload := filepath.Join(append([]string{contentDir}, strings.Split(contentName, "/")...)...)
-					downloadFile(toDownload, contentURL)
+
+					// Pass in the name so we can verify the hash (filename is the hash)
+					downloadFile(toDownload, contentURL, contentName)
 				}
 				s.loadContentFromDisk()
 			}
@@ -171,8 +178,7 @@ func (s *State) startContentSyncWatcher() {
 
 // downloadFile will download a url to a local file. It's efficient because it will
 // write as it downloads and not load the whole file into memory.
-func downloadFile(filepath string, url string) error {
-
+func downloadFile(filepath, url, name string) error {
 	// Create the file
 	out, err := os.Create(filepath)
 	if err != nil {
@@ -193,17 +199,84 @@ func downloadFile(filepath string, url string) error {
 		return err
 	}
 
+	// Check the hash of the file
+	h := sha256.New()
+	if _, err := io.Copy(h, out); err != nil {
+		log.Fatal(err)
+	}
+
+	if fmt.Sprintf("%X", h.Sum(nil)) != name {
+		out.Close()
+		os.Remove(filepath)
+		return errors.New("incomming file from peer did not match expected hash")
+	}
+
 	return nil
 }
 
-// getNeededFromControld asks the controld what we need
-func getNeededFromControld(contentOnDisk []string) []string {
-	return []string{}
+type networkContent struct {
+	contentName      string
+	contentLocations []string
 }
 
-// getContentLocationsFromControld gets a list of lists to the links of files
-func getContentLocationsFromControld(contentNeeded []string) []([]string) {
-	return [][]string{[]string{}}
+type contentList struct {
+	Content []string `json:"content"`
+}
+
+func (c *contentList) Marshal() string {
+	b, _ := json.Marshal(c)
+	return string(b)
+}
+
+// getNeededFromControld asks the controld what we need
+func getNeededFromControld(content []string) []string {
+	c := &contentList{Content: content}
+	resp, err := postToControld("/p2p/state/content_diff", c.Marshal())
+	if err != nil {
+		return []string{}
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	contentNeeded := make([]string, 0)
+	// Get every string in the response (our needed content)
+	jsonparser.ArrayEach(body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		contentNeeded = append(contentNeeded, string(value))
+	}, "response")
+
+	return contentNeeded
+}
+
+// getContentLocationsFromControld gets a list of networkContent objects
+func getContentLocationsFromControld(content []string) []*networkContent {
+	c := &contentList{Content: content}
+	resp, err := postToControld("/p2p/state/content_links", c.Marshal())
+	if err != nil {
+		return []*networkContent{&networkContent{}}
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	ncList := make([]*networkContent, 0)
+
+	// Get all of the files
+	jsonparser.ObjectEach(body, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+		contentNeeded := make([]string, 0)
+		nc := &networkContent{contentName: string(key), contentLocations: contentNeeded}
+
+		// Get all of the links for that file
+		jsonparser.ArrayEach(value, func(v []byte, dataType jsonparser.ValueType, offset int, err error) {
+			contentNeeded = append(contentNeeded, string(v))
+		})
+		// Add this to the network content list
+		ncList = append(ncList, nc)
+		return nil
+	}, "response")
+
+	return ncList
+}
+
+func postToControld(endpoint, message string) (*http.Response, error) {
+	controldBase := config.GetString("ControldProtocol") + "://" + config.GetString("ControldHostname") + ":" + config.GetString("ControldPort") + "/api"
+	byteMessage := []byte(message)
+	return http.Post(controldBase+endpoint, "application/json", bytes.NewBuffer(byteMessage))
 }
 
 // getContentList returns a list of the content we have on disk in the format of:
