@@ -93,6 +93,9 @@ func (s *State) loadContentFromDisk() {
 			if err != nil {
 				log.Fatal("Error when reading content dir: ", err)
 			}
+			log.WithFields(log.Fields{
+				"website": website,
+			}).Debug("Loading website: " + website)
 			for _, contentFile := range contentFiles {
 				// HTML for the page
 				if !contentFile.IsDir() {
@@ -106,9 +109,15 @@ func (s *State) loadContentFromDisk() {
 					// Pull the file
 					b, err := ioutil.ReadFile(path.Join(filePath, website, contentName))
 					if err != nil {
-						log.Fatal(err)
+						log.WithFields(log.Fields{
+							"err":        err,
+							"route_name": routeName,
+						}).Fatal("Error loading route")
 					}
 					m[website][0][routeName] = []byte(b)
+					log.WithFields(log.Fields{
+						"route_name": routeName,
+					}).Debug("Loaded new route")
 
 					// All of the assets for the site
 				} else if contentFile.Name() == "assets" {
@@ -124,6 +133,9 @@ func (s *State) loadContentFromDisk() {
 								log.Fatal(err)
 							}
 							m[website][1][asset.Name()] = []byte(b)
+							log.WithFields(log.Fields{
+								"asset_name": asset.Name(),
+							}).Debug("Loaded new asset")
 						}
 					}
 				}
