@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/buger/jsonparser"
   packages = ["."]
-  revision = "2cac668e8456b4284edb0715e17e2af02d3ec993"
+  revision = "f4dd9f5a6b441265aefc1d44872a6f8c10f42b37"
 
 [[projects]]
   name = "github.com/fsnotify/fsnotify"
@@ -19,8 +19,8 @@
     "config",
     "init/manager"
   ]
-  revision = "449be56d3f2c5a3f00bb8ba9c409fe3e8f47f05d"
-  version = "0.3.2"
+  revision = "ceb48e78a63fcee86795bf168e21bb88d0b3b23f"
+  version = "0.3.4"
 
 [[projects]]
   branch = "master"
@@ -92,16 +92,16 @@
   version = "v1.2.0"
 
 [[projects]]
-  name = "github.com/powerman/rpc-codec"
-  packages = ["jsonrpc2"]
-  revision = "3e1ab3b635b7b0d5f771028cd45aa9a827fd9f31"
-  version = "v1.0.0"
-
-[[projects]]
   branch = "master"
   name = "github.com/rdegges/go-ipify"
   packages = ["."]
   revision = "2d94a6a86c4055118cc30fae2aaed47ec01f2210"
+
+[[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
+  version = "v1.0.6"
 
 [[projects]]
   name = "github.com/spf13/afero"
@@ -122,19 +122,19 @@
   branch = "master"
   name = "github.com/spf13/jwalterweatherman"
   packages = ["."]
-  revision = "7c0cea34c8ece3fbeb2b27ab9b59511d360fb394"
+  revision = "14d3d4c518341bea657dd8a226f5121c0ff8c9f2"
 
 [[projects]]
   name = "github.com/spf13/pflag"
   packages = ["."]
-  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
-  version = "v1.0.1"
+  revision = "9a97c102cda95a86cec2345a6f09f55a939babf5"
+  version = "v1.0.2"
 
 [[projects]]
   name = "github.com/spf13/viper"
   packages = ["."]
-  revision = "b5e8006cbee93ec955a89ab31e0e3ce3204f3736"
-  version = "v1.0.2"
+  revision = "907c19d40d9a6c9bb55f040ff4ae45271a4754b9"
+  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/valyala/fasthttp"
@@ -147,6 +147,12 @@
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -156,7 +162,7 @@
     "windows/svc/eventlog",
     "windows/svc/mgr"
   ]
-  revision = "34b17bdb430002e9db9ae7ddc8480b9fa05edc22"
+  revision = "1c9583448a9c3aa0f9a6a5241bf73c0bd8aafded"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -180,6 +186,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1d2711b368ee9e4ab5d28c8dff7dfa869ced2649457590548aa01e5e62eb4461"
+  inputs-digest = "6ba08a37c6ebccaba0c3af6898ad80f44cb0c2eb5a2ef25a2330df5c931a508f"
   solver-name = "gps-cdcl"
   solver-version = 1

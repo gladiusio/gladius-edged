@@ -3,7 +3,6 @@ package handler
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/buger/jsonparser"
 	ipify "github.com/rdegges/go-ipify"
+	log "github.com/sirupsen/logrus"
 )
 
 // New returns a new P2PHandler object.
@@ -39,7 +39,9 @@ func (p2p *P2PHandler) Connect() {
 	// Tell the network our IP and handle any failures
 	myIP, err := ipify.GetIp()
 	if err != nil {
-		fmt.Println("Couldn't get the public IP address:", err)
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Warn("Error getting public IP address")
 	}
 	ipString := `{"message": {"node": {"ip_address": "` + myIP + `"}}}`
 	resp, err = p2p.post("/message/sign", ipString)
@@ -53,6 +55,9 @@ func (p2p *P2PHandler) Connect() {
 	// Get the signed message
 	signedMessageBytes, _, _, err := jsonparser.Get(body, "response")
 	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Warn("Error getting signed message, controld returned something wrong.")
 		return
 	}
 
@@ -87,11 +92,15 @@ func (p2p *P2PHandler) post(endpoint, message string) (*http.Response, error) {
 }
 
 func (p2p *P2PHandler) startHearbeat() {
+	log.Debug("Started heartbeat")
 	go func() {
 		for {
 			time.Sleep(5 * time.Second)
 			// Update the hearbeat with the current timestamp (in base 10)
-			p2p.UpdateField("heartbeat", strconv.FormatInt(time.Now().Unix(), 10))
+			err := p2p.UpdateField("heartbeat", strconv.FormatInt(time.Now().Unix(), 10))
+			log.WithFields(log.Fields{
+				"err": err.Error(),
+			}).Warn("Error posting heartbeat")
 		}
 	}()
 }

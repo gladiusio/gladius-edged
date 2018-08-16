@@ -30,12 +30,12 @@
   version = "~0.3.1"
 
 [[constraint]]
-  name = "github.com/powerman/rpc-codec"
-  version = "~1.0.0"
-
-[[constraint]]
   name = "github.com/valyala/fasthttp"
   version = "~20160617.0.0"
+
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  version = "1.0.6"
 
 [prune]
   go-tests = true

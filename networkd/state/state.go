@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -22,6 +21,7 @@ import (
 
 	"github.com/buger/jsonparser"
 	"github.com/gladiusio/gladius-utils/config"
+	log "github.com/sirupsen/logrus"
 )
 
 // New returns a new state struct
@@ -158,7 +158,7 @@ func (s *State) startContentSyncWatcher() {
 
 					contentDir, err := getContentDir()
 					if err != nil {
-						log.Println("Can't find content dir")
+						log.Fatal("Can't find content dir")
 						return
 					}
 
@@ -168,7 +168,15 @@ func (s *State) startContentSyncWatcher() {
 					toDownload := filepath.Join(append([]string{contentDir}, strings.Split(contentName, "/")...)...)
 
 					// Pass in the name so we can verify the hash (filename is the hash)
-					downloadFile(toDownload, contentURL, contentName)
+					err = downloadFile(toDownload, contentURL, contentName)
+					if err != nil {
+						log.WithFields(log.Fields{
+							"url":      contentURL,
+							"filename": contentName,
+							"path":     toDownload,
+							"err":      err.Error(),
+						}).Warn("Error downloading file from peer")
+					}
 				}
 				s.loadContentFromDisk()
 			}
@@ -211,6 +219,11 @@ func downloadFile(filepath, url, name string) error {
 		return errors.New("incomming file from peer did not match expected hash")
 	}
 
+	log.WithFields(log.Fields{
+		"url":      url,
+		"filename": name,
+		"path":     filepath,
+	}).Debug("A new file was downloaded from a peer")
 	return nil
 }
 
@@ -233,6 +246,9 @@ func getNeededFromControld(content []string) []string {
 	c := &contentList{Content: content}
 	resp, err := postToControld("/p2p/state/content_diff", c.Marshal())
 	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Warn("Problem getting needed content list from control daemon")
 		return []string{}
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -250,6 +266,9 @@ func getContentLocationsFromControld(content []string) []*networkContent {
 	c := &contentList{Content: content}
 	resp, err := postToControld("/p2p/state/content_links", c.Marshal())
 	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Warn("Problem getting links for needed content from control daemon")
 		return []*networkContent{&networkContent{}}
 	}
 	body, _ := ioutil.ReadAll(resp.Body)

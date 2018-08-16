@@ -1,11 +1,10 @@
 package networkd
 
 import (
-	"fmt"
-
 	"github.com/gladiusio/gladius-networkd/networkd/p2p/handler"
 	"github.com/gladiusio/gladius-networkd/networkd/server/contserver"
 	"github.com/gladiusio/gladius-networkd/networkd/state"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gladiusio/gladius-utils/config"
 	"github.com/gladiusio/gladius-utils/init/manager"
@@ -25,12 +24,12 @@ func SetupAndRun() {
 
 // Run - Start a web server
 func Run() {
-	fmt.Println("Loading config")
+	log.Info("Loading config")
 
 	// Setup config handling
 	config.SetupConfig("gladius-networkd", config.NetworkDaemonDefaults())
 
-	fmt.Println("Starting...")
+	log.Info("Starting...")
 
 	// Create new thread safe state of the networkd
 	s := state.New("0.3.0")
@@ -44,9 +43,9 @@ func Run() {
 	controldBase := config.GetString("ControldProtocol") + "://" + config.GetString("ControldHostname") + ":" + config.GetString("ControldPort") + "/api/p2p"
 	// TODO: Get seed node from the blockchain
 	p2pHandler := handler.New(controldBase, config.GetString("P2PSeedNodeAddress"))
-	p2pHandler.Connect()
+	go p2pHandler.Connect()
 
-	fmt.Println("Started HTTP server.")
+	log.Info("Started HTTP server.")
 
 	// Block forever
 	select {}
