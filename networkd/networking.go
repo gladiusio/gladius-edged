@@ -29,6 +29,20 @@ func Run() {
 	// Setup config handling
 	config.SetupConfig("gladius-networkd", config.NetworkDaemonDefaults())
 
+	// Setup logging level
+	switch loglevel := config.GetString("LogLevel"); loglevel {
+	case "debug":
+		log.SetLevel(log.DebugLevel)
+	case "warning":
+		log.SetLevel(log.WarnLevel)
+	case "info":
+		log.SetLevel(log.InfoLevel)
+	case "error":
+		log.SetLevel(log.ErrorLevel)
+	default:
+		log.SetLevel(log.InfoLevel)
+	}
+
 	log.Info("Starting...")
 
 	// Create new thread safe state of the networkd
