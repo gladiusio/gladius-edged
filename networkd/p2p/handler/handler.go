@@ -2,7 +2,9 @@ package handler
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -72,6 +74,7 @@ func (p2p *P2PHandler) Connect() {
 
 	// Once we have successfully connected, start the heartbeat
 	p2p.startHearbeat()
+
 }
 
 func getSuccess(resp *http.Response, err error) (bool, []byte) {
@@ -106,8 +109,23 @@ func (p2p *P2PHandler) startHearbeat() {
 }
 
 // UpdateField updates the specified node field with the value
-func (p2p *P2PHandler) UpdateField(key, value string) error {
-	updateString := `{"message": {"node": {"` + key + `": "` + value + `"}}}`
+func (p2p *P2PHandler) UpdateField(key string, value ...string) error {
+	var updateString string
+	// Create the update string to get signed
+	if len(value) == 1 {
+		updateString = `{"message": {"node": {"` + key + `": "` + value[0] + `"}}}`
+	} else if len(value) > 0 {
+		valueJSON, err := json.Marshal(value)
+		if err != nil {
+			return errors.New("Input values for the method UpdateField couldn't be parsed")
+		}
+		updateString = `{"message": {"node": {"` + key + `": "` + string(valueJSON) + `"}}}`
+	} else {
+		return errors.New("UpdateField needs at least one value")
+	}
+
+	fmt.Println(updateString)
+
 	resp, err := p2p.post("/message/sign", updateString)
 	success, body := getSuccess(resp, err)
 	if !success {

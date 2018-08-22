@@ -20,24 +20,75 @@ import (
 	"time"
 
 	"github.com/buger/jsonparser"
+	"github.com/gladiusio/gladius-networkd/networkd/p2p/handler"
 	"github.com/gladiusio/gladius-utils/config"
 	log "github.com/sirupsen/logrus"
 )
 
 // New returns a new state struct
-func New(version string) *State {
-	state := &State{running: true, content: make(map[string]([2](map[string][]byte))), runChannel: make(chan bool), version: version}
+func New(p2pHandler *handler.P2PHandler) *State {
+	state := &State{running: true, content: &contentStore{make(map[string]*websiteContent)}, runChannel: make(chan bool), p2p: p2pHandler}
 	state.startContentSyncWatcher()
 	return state
 }
 
 // State is a thread safe struct for keeping information about the networkd
 type State struct {
+	p2p        *handler.P2PHandler
 	running    bool
-	content    map[string]([2](map[string][]byte)) // A map of website to an array of maps, the first being page content, the second being assets
+	content    *contentStore
 	runChannel chan (bool)
-	version    string
 	mux        sync.Mutex
+}
+
+type contentStore struct {
+	websites map[string]*websiteContent
+}
+
+func (c contentStore) getContentList() []string {
+	contentList := make([]string, 0)
+
+	for websiteName, wc := range c.websites {
+		for routeName := range wc.routes {
+			contentList = append(contentList, strings.Join([]string{websiteName, "content", routeName}, "/"))
+		}
+		for assetName := range wc.assets {
+			contentList = append(contentList, strings.Join([]string{websiteName, "asset", assetName}, "/"))
+		}
+
+	}
+	return contentList
+}
+
+func (c contentStore) getWebsite(name string) *websiteContent {
+	return c.websites[name]
+}
+
+func (c contentStore) createWebsite(name string) *websiteContent {
+	wc := &websiteContent{make(map[string][]byte), make(map[string][]byte)}
+	c.websites[name] = wc
+	return wc
+}
+
+type websiteContent struct {
+	assets map[string][]byte
+	routes map[string][]byte
+}
+
+func (w websiteContent) getRoute(name string) []byte {
+	return w.routes[name]
+}
+
+func (w *websiteContent) createRoute(name string, content []byte) {
+	w.routes[name] = content
+}
+
+func (w websiteContent) getAsset(name string) []byte {
+	return w.assets[name]
+}
+
+func (w *websiteContent) createAsset(name string, content []byte) {
+	w.assets[name] = content
 }
 
 type status struct {
@@ -50,21 +101,21 @@ func (s *State) GetPage(website, route string) []byte {
 	s.mux.Lock()
 	// Lock so only one goroutine at a time can access the map
 	defer s.mux.Unlock()
-	return s.content[website][0][route]
+	return s.content.getWebsite(website).getRoute(route)
 }
 
 func (s *State) GetAsset(website, asset string) []byte {
 	s.mux.Lock()
 	// Lock so only one goroutine at a time can access the map
 	defer s.mux.Unlock()
-	return s.content[website][1][asset]
+	return s.content.getWebsite(website).getAsset(asset)
 }
 
 func (s *State) Info() string {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
-	status := &status{Running: s.running, Version: s.version}
+	status := &status{Running: s.running}
 
 	jsonString, _ := json.Marshal(status)
 	return string(jsonString)
@@ -82,45 +133,49 @@ func (s *State) loadContentFromDisk() {
 		log.Fatal("Error when reading content dir: ", err)
 	}
 	// map websites
-	m := make(map[string]([2](map[string][]byte)))
+	cs := &contentStore{make(map[string]*websiteContent)}
 
 	for _, f := range files {
 		website := f.Name()
-		if f.IsDir() { /* content */ /* assets */
-			m[website] = [2]map[string][]byte{make(map[string][]byte), make(map[string][]byte)}
+		if f.IsDir() {
+			// Create a website store
+			wc := cs.createWebsite(website)
 
-			contentFiles, err := ioutil.ReadDir(path.Join(filePath, website))
+			// Get all of the files for that website
+			websiteFiles, err := ioutil.ReadDir(path.Join(filePath, website))
 			if err != nil {
 				log.Fatal("Error when reading content dir: ", err)
 			}
 			log.WithFields(log.Fields{
 				"website": website,
 			}).Debug("Loading website: " + website)
-			for _, contentFile := range contentFiles {
-				// HTML for the page
-				if !contentFile.IsDir() {
+			for _, websiteFile := range websiteFiles {
+				// If it is not the "assets" folder it must be HTML for a route, this
+				// works because all routes are top level in the website folder
+				if !websiteFile.IsDir() {
 					// Replace "%2f" with "/"
 					replacer := strings.NewReplacer("%2f", "/", "%2F", "/")
-					contentName := contentFile.Name()
+					fileName := websiteFile.Name()
 
 					// Create a route name for the mapping
-					routeName := replacer.Replace(contentName)
+					routeName := replacer.Replace(fileName)
 
 					// Pull the file
-					b, err := ioutil.ReadFile(path.Join(filePath, website, contentName))
+					b, err := ioutil.ReadFile(path.Join(filePath, website, fileName))
 					if err != nil {
 						log.WithFields(log.Fields{
 							"err":        err,
 							"route_name": routeName,
 						}).Fatal("Error loading route")
 					}
-					m[website][0][routeName] = []byte(b)
+					// Create the route in the website content
+					wc.createRoute(routeName, []byte(b))
 					log.WithFields(log.Fields{
 						"route_name": routeName,
 					}).Debug("Loaded new route")
 
 					// All of the assets for the site
-				} else if contentFile.Name() == "assets" {
+				} else if websiteFile.Name() == "assets" {
 					assets, err := ioutil.ReadDir(path.Join(filePath, website, "assets"))
 					if err != nil {
 						log.Fatal("Error when reading assets dir: ", err)
@@ -132,7 +187,8 @@ func (s *State) loadContentFromDisk() {
 							if err != nil {
 								log.Fatal(err)
 							}
-							m[website][1][asset.Name()] = []byte(b)
+							// Create the asset
+							wc.createAsset(asset.Name(), []byte(b))
 							log.WithFields(log.Fields{
 								"asset_name": asset.Name(),
 							}).Debug("Loaded new asset")
@@ -143,8 +199,16 @@ func (s *State) loadContentFromDisk() {
 		}
 	}
 	s.mux.Lock()
-	s.content = m
+	s.content = cs
 	s.mux.Unlock()
+
+	// Tell the controld about our new content
+	err = s.p2p.UpdateField("disk_content", cs.getContentList()...)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Warn("Error updating disk content")
+	}
 }
 
 func (s *State) startContentSyncWatcher() {
@@ -311,24 +375,12 @@ func postToControld(endpoint, message string) (*http.Response, error) {
 }
 
 // getContentList returns a list of the content we have on disk in the format of:
-// <website name>/<asset or content>/<fileName>
+// <website name>/<"asset" or "content">/<fileName>
 func (s *State) getContentList() []string {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
-	contentList := make([]string, 0)
-
-	for websiteName, websiteData := range s.content {
-		for routeName := range websiteData[0] {
-			contentList = append(contentList, strings.Join([]string{websiteName, "content", routeName}, "/"))
-		}
-		for assetName := range websiteData[1] {
-			contentList = append(contentList, strings.Join([]string{websiteName, "asset", assetName}, "/"))
-		}
-
-	}
-
-	return contentList
+	return s.content.getContentList()
 }
 
 func getContentDir() (string, error) {
