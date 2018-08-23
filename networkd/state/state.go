@@ -47,13 +47,9 @@ type contentStore struct {
 
 func (c contentStore) getContentList() []string {
 	contentList := make([]string, 0)
-
 	for websiteName, wc := range c.websites {
-		for routeName := range wc.routes {
-			contentList = append(contentList, strings.Join([]string{websiteName, "content", routeName}, "/"))
-		}
 		for assetName := range wc.assets {
-			contentList = append(contentList, strings.Join([]string{websiteName, "asset", assetName}, "/"))
+			contentList = append(contentList, strings.Join([]string{websiteName, assetName}, "/"))
 		}
 
 	}
@@ -65,22 +61,13 @@ func (c contentStore) getWebsite(name string) *websiteContent {
 }
 
 func (c contentStore) createWebsite(name string) *websiteContent {
-	wc := &websiteContent{make(map[string][]byte), make(map[string][]byte)}
+	wc := &websiteContent{make(map[string][]byte)}
 	c.websites[name] = wc
 	return wc
 }
 
 type websiteContent struct {
 	assets map[string][]byte
-	routes map[string][]byte
-}
-
-func (w websiteContent) getRoute(name string) []byte {
-	return w.routes[name]
-}
-
-func (w *websiteContent) createRoute(name string, content []byte) {
-	w.routes[name] = content
 }
 
 func (w websiteContent) getAsset(name string) []byte {
@@ -94,14 +81,6 @@ func (w *websiteContent) createAsset(name string, content []byte) {
 type status struct {
 	Running bool
 	Version string
-}
-
-// Content gets the current content in ram
-func (s *State) GetPage(website, route string) []byte {
-	s.mux.Lock()
-	// Lock so only one goroutine at a time can access the map
-	defer s.mux.Unlock()
-	return s.content.getWebsite(website).getRoute(route)
 }
 
 func (s *State) GetAsset(website, asset string) []byte {
@@ -150,50 +129,24 @@ func (s *State) loadContentFromDisk() {
 				"website": website,
 			}).Debug("Loading website: " + website)
 			for _, websiteFile := range websiteFiles {
-				// If it is not the "assets" folder it must be HTML for a route, this
-				// works because all routes are top level in the website folder
+				// Ignore subdirecories
 				if !websiteFile.IsDir() {
-					// Replace "%2f" with "/"
-					replacer := strings.NewReplacer("%2f", "/", "%2F", "/")
 					fileName := websiteFile.Name()
-
-					// Create a route name for the mapping
-					routeName := replacer.Replace(fileName)
 
 					// Pull the file
 					b, err := ioutil.ReadFile(path.Join(filePath, website, fileName))
 					if err != nil {
 						log.WithFields(log.Fields{
-							"err":        err,
-							"route_name": routeName,
-						}).Fatal("Error loading route")
+							"err":       err,
+							"file_name": fileName,
+						}).Fatal("Error loading asset")
 					}
-					// Create the route in the website content
-					wc.createRoute(routeName, []byte(b))
+					// Create the asset in the website content
+					wc.createAsset(fileName, []byte(b))
 					log.WithFields(log.Fields{
-						"route_name": routeName,
-					}).Debug("Loaded new route")
+						"asset_name": fileName,
+					}).Debug("Loaded new asset")
 
-					// All of the assets for the site
-				} else if websiteFile.Name() == "assets" {
-					assets, err := ioutil.ReadDir(path.Join(filePath, website, "assets"))
-					if err != nil {
-						log.Fatal("Error when reading assets dir: ", err)
-					}
-					for _, asset := range assets {
-						if !asset.IsDir() {
-							// Pull the file
-							b, err := ioutil.ReadFile(path.Join(filePath, website, "assets", asset.Name()))
-							if err != nil {
-								log.Fatal(err)
-							}
-							// Create the asset
-							wc.createAsset(asset.Name(), []byte(b))
-							log.WithFields(log.Fields{
-								"asset_name": asset.Name(),
-							}).Debug("Loaded new asset")
-						}
-					}
 				}
 			}
 		}
@@ -375,7 +328,7 @@ func postToControld(endpoint, message string) (*http.Response, error) {
 }
 
 // getContentList returns a list of the content we have on disk in the format of:
-// <website name>/<"asset" or "content">/<fileName>
+// <website name>/<fileName>
 func (s *State) getContentList() []string {
 	s.mux.Lock()
 	defer s.mux.Unlock()

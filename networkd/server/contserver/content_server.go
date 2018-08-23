@@ -70,17 +70,16 @@ func requestHandler(s *state.State) func(ctx *fasthttp.RequestCtx) {
 }
 
 func contentHandler(ctx *fasthttp.RequestCtx, s *state.State) {
-	// URL format like /content?website=REQUESTED_SITE?route=test%2Ftest
+	// URL format like /content?website=REQUESTED_SITE?asset=FILE_HASH
 	website := string(ctx.QueryArgs().Peek("website"))
-	route := string(ctx.QueryArgs().Peek("route"))
 	asset := string(ctx.QueryArgs().Peek("asset"))
 
 	if asset != "" {
 		ctx.SetStatusCode(fasthttp.StatusOK)
 		ctx.Write(s.GetAsset(website, asset))
 	} else {
-		ctx.SetStatusCode(fasthttp.StatusOK)
-		ctx.Write(s.GetPage(website, route))
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.Write([]byte(`Must specify asset in URL, like /content?website=REQUESTED_SITE?asset=FILE_HASH`))
 	}
 }
 
