@@ -52,7 +52,6 @@ func (s *State) startContentFileWatcher() {
 
 	// out of the box fsnotify can watch a single file, or a single directory
 	filePath, err := getContentDir()
-	fmt.Println(filePath)
 	if err != nil {
 		log.Fatal("Error getting content dir", err)
 	}
