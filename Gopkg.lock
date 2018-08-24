@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/apex/log"
+  packages = ["."]
+  revision = "0296d6eb16bb28f8a0c55668affcf4876dc269be"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/buger/jsonparser"
   packages = ["."]
@@ -19,8 +25,8 @@
     "config",
     "init/manager"
   ]
-  revision = "ceb48e78a63fcee86795bf168e21bb88d0b3b23f"
-  version = "0.3.4"
+  revision = "563c83e7e92bcdd1322616a70d139865ba1efb78"
+  version = "0.3.5"
 
 [[projects]]
   branch = "master"
@@ -55,7 +61,7 @@
   branch = "master"
   name = "github.com/kardianos/service"
   packages = ["."]
-  revision = "615a14ed75099c9eaac6949e22ac2341bf9d3197"
+  revision = "8f267d80f2eb68998661a325c0e53fca4485e626"
 
 [[projects]]
   name = "github.com/klauspost/compress"
@@ -80,16 +86,22 @@
   version = "v1.8.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
-  revision = "f15292f7a699fcc1a38a80977f80a046874ba8ac"
+  revision = "fa473d140ef3c6adf42d6b391fe76707f1f243c8"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
   revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
   version = "v1.2.0"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   branch = "master"
@@ -149,7 +161,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
+  revision = "614d502a4dac94afa3a6ce146bd1736da82514c6"
 
 [[projects]]
   branch = "master"
@@ -162,7 +174,7 @@
     "windows/svc/eventlog",
     "windows/svc/mgr"
   ]
-  revision = "1c9583448a9c3aa0f9a6a5241bf73c0bd8aafded"
+  revision = "4910a1d54f876d7b22162a85f4d066d3ee649450"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -186,6 +198,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6ba08a37c6ebccaba0c3af6898ad80f44cb0c2eb5a2ef25a2330df5c931a508f"
+  inputs-digest = "208134e77512cc00205fd86e72497c607c770df2ff0b24d4a418f11737de37af"
   solver-name = "gps-cdcl"
   solver-version = 1

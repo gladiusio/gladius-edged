@@ -84,6 +84,7 @@ func getSuccess(resp *http.Response, err error) (bool, []byte) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	success, err := jsonparser.GetBoolean(body, "success")
 	if !success || err != nil {
+		log.Debug("Success was false, this was the body: " + string(body))
 		return false, []byte{}
 	}
 	return true, body
@@ -111,15 +112,27 @@ func (p2p *P2PHandler) startHearbeat() {
 // UpdateField updates the specified node field with the value
 func (p2p *P2PHandler) UpdateField(key string, value ...string) error {
 	var updateString string
-	// Create the update string to get signed
-	if len(value) == 1 {
+
+	// Check for the disk content field so we always send the controld a list here
+	if key == "disk_content" {
+		valueJSON, err := json.Marshal(value)
+		if err != nil {
+			return errors.New("Input values for the method UpdateField couldn't be parsed")
+		}
+		updateString = `{"message": {"node": {"` + key + `": ` + string(valueJSON) + `}}}`
+
+		// Send a string if we only have one
+	} else if len(value) == 1 {
 		updateString = `{"message": {"node": {"` + key + `": "` + value[0] + `"}}}`
+
+		// If we have more than one value send a list
 	} else if len(value) > 0 {
 		valueJSON, err := json.Marshal(value)
 		if err != nil {
 			return errors.New("Input values for the method UpdateField couldn't be parsed")
 		}
-		updateString = `{"message": {"node": {"` + key + `": "` + string(valueJSON) + `"}}}`
+		updateString = `{"message": {"node": {"` + key + `": ` + string(valueJSON) + `}}}`
+
 	} else {
 		return errors.New("UpdateField needs at least one value")
 	}
