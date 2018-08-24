@@ -60,6 +60,12 @@ func (s *State) startContentFileWatcher() {
 	if err != nil {
 		log.Fatal("Error when reading content dir: ", err)
 	}
+	if err := watcher.Add(filePath); err != nil {
+		log.WithFields(log.Fields{
+			"error":     err,
+			"directory": filePath,
+		}).Error("Can't add watcher to content directory")
+	}
 	for _, f := range files {
 		website := f.Name()
 		if f.IsDir() {
