@@ -41,7 +41,9 @@ func (p2p *P2PHandler) Connect() {
 	}
 
 	// Once we have successfully connected, start the heartbeat
-	p2p.startHearbeat()
+	if !viper.GetBool("DisableHeartbeat") {
+		p2p.startHearbeat()
+	}
 
 }
 
@@ -97,7 +99,7 @@ func (p2p *P2PHandler) startHearbeat() {
 			}
 
 			// If we have detection on, tell the network our IP and handle any failures
-			if !viper.GetBool("DontDiscoverIP") {
+			if !viper.GetBool("DisableIPDiscovery") {
 				myIP, err := getIP()
 				if err != nil {
 					log.WithFields(log.Fields{
