@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -157,8 +156,6 @@ func (p2p *P2PHandler) UpdateField(key string, value ...string) error {
 	} else {
 		return errors.New("UpdateField needs at least one value")
 	}
-
-	fmt.Println(updateString)
 
 	resp, err := p2p.post("/message/sign", updateString)
 	success, body := getSuccess(resp, err)
