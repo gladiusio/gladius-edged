@@ -31,14 +31,15 @@ type P2PHandler struct {
 // Connect connects to the p2p newtwork and starts the heartbeat once connected.
 func (p2p *P2PHandler) Connect() {
 	// Join the p2p network and handle any failures
-	joinString := `{"ip":"` + p2p.joinIP + `"}`
-	resp, err := p2p.post("/network/join", joinString)
-	if success, _ := getSuccess(resp, err); !success {
-		time.Sleep(10 * time.Second)
-		go p2p.Connect()
-		return
+	if !viper.GetBool("DisableAutoJoin") {
+		joinString := `{"ip":"` + p2p.joinIP + `"}`
+		resp, err := p2p.post("/network/join", joinString)
+		if success, _ := getSuccess(resp, err); !success {
+			time.Sleep(10 * time.Second)
+			go p2p.Connect()
+			return
+		}
 	}
-
 	// Once we have successfully connected, start the heartbeat
 	if !viper.GetBool("DisableHeartbeat") {
 		p2p.startHearbeat()
