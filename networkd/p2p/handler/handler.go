@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/buger/jsonparser"
 	ipify "github.com/rdegges/go-ipify"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 // New returns a new P2PHandler object.
@@ -23,6 +25,7 @@ type P2PHandler struct {
 	joinIP       string
 	controldBase string
 	connected    bool
+	ourIP        string
 }
 
 // Connect connects to the p2p newtwork and starts the heartbeat once connected.
@@ -36,42 +39,31 @@ func (p2p *P2PHandler) Connect() {
 		return
 	}
 
-	// Tell the network our IP and handle any failures
-	myIP, err := ipify.GetIp()
+	// Once we have successfully connected, start the heartbeat
+	if !viper.GetBool("DisableHeartbeat") {
+		p2p.startHearbeat()
+	}
+
+}
+
+func getIP() (string, error) {
+	return ipify.GetIp()
+}
+
+func (p2p *P2PHandler) postIP() (bool, error) {
+	myIP, err := getIP()
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err.Error(),
 		}).Warn("Error getting public IP address")
-	}
-	ipString := `{"message": {"node": {"ip_address": "` + myIP + `"}}}`
-	resp, err = p2p.post("/message/sign", ipString)
-	success, body := getSuccess(resp, err)
-	if !success {
-		time.Sleep(10 * time.Second)
-		go p2p.Connect()
-		return
+		return false, err
 	}
 
-	// Get the signed message
-	signedMessageBytes, _, _, err := jsonparser.Get(body, "response")
+	err = p2p.UpdateField("ip_address", myIP)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err.Error(),
-		}).Warn("Error getting signed message, controld returned something wrong.")
-		return
+		return false, err
 	}
-
-	// Send the signed message to the p2p network introducing ourselves
-	resp, err = p2p.post("/state/push_message", string(signedMessageBytes))
-	success, body = getSuccess(resp, err)
-	if !success {
-		time.Sleep(10 * time.Second)
-		go p2p.Connect()
-		return
-	}
-
-	// Once we have successfully connected, start the heartbeat
-	p2p.startHearbeat()
+	return true, nil
 }
 
 func getSuccess(resp *http.Response, err error) (bool, []byte) {
@@ -81,6 +73,7 @@ func getSuccess(resp *http.Response, err error) (bool, []byte) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	success, err := jsonparser.GetBoolean(body, "success")
 	if !success || err != nil {
+		log.Debug("Success was false, this was the body: " + string(body))
 		return false, []byte{}
 	}
 	return true, body
@@ -98,16 +91,72 @@ func (p2p *P2PHandler) startHearbeat() {
 			time.Sleep(5 * time.Second)
 			// Update the hearbeat with the current timestamp (in base 10)
 			err := p2p.UpdateField("heartbeat", strconv.FormatInt(time.Now().Unix(), 10))
-			log.WithFields(log.Fields{
-				"err": err.Error(),
-			}).Warn("Error posting heartbeat")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err.Error(),
+				}).Warn("Error posting heartbeat")
+			}
+
+			// If we have detection on, tell the network our IP and handle any failures
+			if !viper.GetBool("DisableIPDiscovery") {
+				myIP, err := getIP()
+				if err != nil {
+					log.WithFields(log.Fields{
+						"err": err.Error(),
+					}).Warn("Error getting public IP address")
+					break
+				}
+				// If the IP changed since last time, inform the network
+				if myIP != p2p.ourIP && myIP != "" {
+					success, err := p2p.postIP()
+					if err != nil {
+						log.WithFields(log.Fields{
+							"detected_ip": myIP,
+							"err":         err,
+						}).Error("Error updating this node's public IP in network state")
+					}
+					if !success {
+						log.WithFields(log.Fields{
+							"detected_ip": myIP,
+						}).Warn("Error updating this node's public IP in network state")
+					} else {
+						// If successfull, update the local state's IP so we can detect changes
+						p2p.ourIP = myIP
+					}
+				}
+			}
 		}
 	}()
 }
 
 // UpdateField updates the specified node field with the value
-func (p2p *P2PHandler) UpdateField(key, value string) error {
-	updateString := `{"message": {"node": {"` + key + `": "` + value + `"}}}`
+func (p2p *P2PHandler) UpdateField(key string, value ...string) error {
+	var updateString string
+
+	// Check for the disk content field so we always send the controld a list here
+	if key == "disk_content" {
+		valueJSON, err := json.Marshal(value)
+		if err != nil {
+			return errors.New("Input values for the method UpdateField couldn't be parsed")
+		}
+		updateString = `{"message": {"node": {"` + key + `": ` + string(valueJSON) + `}}}`
+
+		// Send a string if we only have one
+	} else if len(value) == 1 {
+		updateString = `{"message": {"node": {"` + key + `": "` + value[0] + `"}}}`
+
+		// If we have more than one value send a list
+	} else if len(value) > 0 {
+		valueJSON, err := json.Marshal(value)
+		if err != nil {
+			return errors.New("Input values for the method UpdateField couldn't be parsed")
+		}
+		updateString = `{"message": {"node": {"` + key + `": ` + string(valueJSON) + `}}}`
+
+	} else {
+		return errors.New("UpdateField needs at least one value")
+	}
+
 	resp, err := p2p.post("/message/sign", updateString)
 	success, body := getSuccess(resp, err)
 	if !success {
