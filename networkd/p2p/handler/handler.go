@@ -16,12 +16,18 @@ import (
 )
 
 // New returns a new P2PHandler object.
-func New(controldBase, joinIP string) *P2PHandler {
-	return &P2PHandler{controldBase: controldBase, connected: false, joinIP: joinIP}
+func New(controldBase, joinIP, contentPort string) *P2PHandler {
+	return &P2PHandler{
+		controldBase: controldBase,
+		connected:    false,
+		joinIP:       joinIP,
+		contentPort:  contentPort,
+	}
 }
 
 // P2PHandler is a type that interfaces with the controld's p2p network
 type P2PHandler struct {
+	contentPort  string
 	joinIP       string
 	controldBase string
 	connected    bool
@@ -39,7 +45,14 @@ func (p2p *P2PHandler) Connect() {
 			go p2p.Connect()
 			return
 		}
+		err = p2p.UpdateField("content_port", p2p.contentPort)
+		if err != nil {
+			time.Sleep(10 * time.Second)
+			go p2p.Connect()
+			return
+		}
 	}
+
 	// Once we have successfully connected, start the heartbeat
 	if !viper.GetBool("DisableHeartbeat") {
 		p2p.startHearbeat()

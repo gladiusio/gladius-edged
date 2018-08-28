@@ -1,10 +1,14 @@
 package networkd
 
 import (
+	"strings"
+
+	"github.com/gladiusio/gladius-networkd/networkd/defaults"
 	"github.com/gladiusio/gladius-networkd/networkd/p2p/handler"
 	"github.com/gladiusio/gladius-networkd/networkd/server/contserver"
 	"github.com/gladiusio/gladius-networkd/networkd/state"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 
 	"github.com/gladiusio/gladius-utils/config"
 	"github.com/gladiusio/gladius-utils/init/manager"
@@ -27,7 +31,11 @@ func Run() {
 	log.Info("Loading config")
 
 	// Setup config handling
-	config.SetupConfig("gladius-networkd", config.NetworkDaemonDefaults())
+	config.SetupConfig("gladius-networkd", defaults.NetworkDaemonDefaults())
+	viper.SetEnvPrefix("CONTENTD")
+	r := strings.NewReplacer(".", "_")
+	viper.SetEnvKeyReplacer(r)
+	viper.AutomaticEnv()
 
 	// Setup logging level
 	switch loglevel := config.GetString("LogLevel"); loglevel {
@@ -43,19 +51,19 @@ func Run() {
 		log.SetLevel(log.InfoLevel)
 	}
 
-	log.Info("Starting...")
+	log.Info("Starting content server on port: " + viper.GetString("ContentPort"))
 
 	// Create a p2p handler
 	controldBase := config.GetString("ControldProtocol") + "://" + config.GetString("ControldHostname") + ":" + config.GetString("ControldPort") + "/api/p2p"
 	// TODO: Get seed node from the blockchain
-	p2pHandler := handler.New(controldBase, config.GetString("P2PSeedNodeAddress"))
+	p2pHandler := handler.New(controldBase, config.GetString("P2PSeedNodeAddress"), viper.GetString("ContentPort"))
 	go p2pHandler.Connect()
 
 	// Create new thread safe state of the networkd
 	s := state.New(p2pHandler)
 
 	// Create a content server
-	cs := contserver.New(s)
+	cs := contserver.New(s, viper.GetString("ContentPort"))
 	cs.Start()
 	defer cs.Stop()
 

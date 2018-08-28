@@ -12,13 +12,14 @@ import (
 // ContentServer is a server that serves the gladius content from the state
 type ContentServer struct {
 	running         bool
+	port            string
 	contentListener net.Listener
 	state           *state.State
 }
 
 // New creates a new content server and starts it
-func New(state *state.State) *ContentServer {
-	cs := &ContentServer{state: state, running: false}
+func New(state *state.State, port string) *ContentServer {
+	cs := &ContentServer{state: state, running: false, port: port}
 	cs.Start()
 	return cs
 }
@@ -27,7 +28,7 @@ func New(state *state.State) *ContentServer {
 func (cs *ContentServer) Start() {
 	if !cs.running {
 		var err error
-		cs.contentListener, err = net.Listen("tcp", ":8080")
+		cs.contentListener, err = net.Listen("tcp", ":"+cs.port)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"err": err.Error(),
