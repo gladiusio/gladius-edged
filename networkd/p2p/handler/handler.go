@@ -54,9 +54,7 @@ func (p2p *P2PHandler) Connect() {
 	}
 
 	// Once we have successfully connected, start the heartbeat
-	if !viper.GetBool("DisableHeartbeat") {
-		p2p.startHearbeat()
-	}
+	p2p.startHearbeat()
 
 }
 
@@ -110,16 +108,18 @@ func (p2p *P2PHandler) startHearbeat() {
 		for {
 			time.Sleep(5 * time.Second)
 			// Update the hearbeat with the current timestamp (in base 10)
-			err := p2p.UpdateField("heartbeat", strconv.FormatInt(time.Now().Unix(), 10))
-			if err != nil {
-				log.WithFields(log.Fields{
-					"err": err.Error(),
-				}).Warn("Error posting heartbeat")
+			if !viper.GetBool("DisableHeartbeat") {
+				err := p2p.UpdateField("heartbeat", strconv.FormatInt(time.Now().Unix(), 10))
+				if err != nil {
+					log.WithFields(log.Fields{
+						"err": err.Error(),
+					}).Warn("Error posting heartbeat")
+				}
 			}
-
 			// If we have detection on, tell the network our IP and handle any failures
 			if !viper.GetBool("DisableIPDiscovery") {
 				var myIP string
+				var err error
 				if viper.GetString("OverrideIP") == "" {
 					myIP, err = getIP()
 					if err != nil {
