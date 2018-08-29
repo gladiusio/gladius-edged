@@ -113,12 +113,17 @@ func (p2p *P2PHandler) startHearbeat() {
 
 			// If we have detection on, tell the network our IP and handle any failures
 			if !viper.GetBool("DisableIPDiscovery") {
-				myIP, err := getIP()
-				if err != nil {
-					log.WithFields(log.Fields{
-						"err": err.Error(),
-					}).Warn("Error getting public IP address")
-					break
+				var myIP string
+				if viper.GetString("OverrideIP") == "" {
+					myIP, err = getIP()
+					if err != nil {
+						log.WithFields(log.Fields{
+							"err": err.Error(),
+						}).Warn("Error getting public IP address")
+						break
+					}
+				} else {
+					myIP = viper.GetString("OverrideIP")
 				}
 				// If the IP changed since last time, inform the network
 				if myIP != p2p.ourIP && myIP != "" {
