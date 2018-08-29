@@ -45,6 +45,7 @@ func (p2p *P2PHandler) Connect() {
 			go p2p.Connect()
 			return
 		}
+		time.Sleep(10 * time.Second)
 		err = p2p.UpdateField("content_port", p2p.contentPort)
 		if err != nil {
 			time.Sleep(10 * time.Second)
