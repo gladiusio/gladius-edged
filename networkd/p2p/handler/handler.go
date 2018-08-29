@@ -65,12 +65,18 @@ func getIP() (string, error) {
 }
 
 func (p2p *P2PHandler) postIP() (bool, error) {
-	myIP, err := getIP()
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err.Error(),
-		}).Warn("Error getting public IP address")
-		return false, err
+	var myIP string
+	var err error
+	if viper.GetString("OverrideIP") == "" {
+		myIP, err = getIP()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err.Error(),
+			}).Warn("Error getting public IP address")
+			return false, err
+		}
+	} else {
+		myIP = viper.GetString("OverrideIP")
 	}
 
 	err = p2p.UpdateField("ip_address", myIP)
@@ -127,6 +133,7 @@ func (p2p *P2PHandler) startHearbeat() {
 				}
 				// If the IP changed since last time, inform the network
 				if myIP != p2p.ourIP && myIP != "" {
+
 					success, err := p2p.postIP()
 					if err != nil {
 						log.WithFields(log.Fields{
