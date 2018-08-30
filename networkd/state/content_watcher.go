@@ -110,7 +110,7 @@ func (s *State) loadContentFromDisk() {
 			}).Debug("Loading website: " + website)
 			for _, websiteFile := range websiteFiles {
 				// Ignore subdirecories
-				if !websiteFile.IsDir() {
+				if !websiteFile.IsDir() && !strings.Contains(websiteFile.Name(), "temp") {
 					fileName := websiteFile.Name()
 
 					// Pull the file
@@ -208,7 +208,7 @@ func downloadFile(toDownload, url, name string) error {
 	}
 
 	// Create the file
-	out, err := os.Create(toDownload)
+	out, err := os.Create(toDownload + "_temp")
 	if err != nil {
 		return err
 	}
@@ -230,13 +230,15 @@ func downloadFile(toDownload, url, name string) error {
 	// Check the hash of the file
 	h := sha256.New()
 	if _, err := io.Copy(h, out); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	if fmt.Sprintf("%X", h.Sum(nil)) != strings.ToUpper(name) {
+	actualHash := fmt.Sprintf("%X", h.Sum(nil))
+	if actualHash != strings.ToUpper(name) {
 		out.Close()
 		os.Remove(toDownload)
-		return errors.New("incomming file from peer did not match expected hash")
+		errorString := fmt.Sprintf("incoming file from peer did not match expected hash. Expecting: %s, got: %s", strings.ToUpper(name), actualHash)
+		return errors.New(errorString)
 	}
 
 	log.WithFields(log.Fields{
