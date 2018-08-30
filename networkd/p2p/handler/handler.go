@@ -72,7 +72,7 @@ func (p2p *P2PHandler) postIP() (bool, error) {
 
 	toUpdate := make(map[string]string)
 	toUpdate["ip_address"] = myIP
-	toUpdate["disk_content"] = p2p.contentPort
+	toUpdate["content_port"] = p2p.contentPort
 	err = p2p.UpdateFields(toUpdate)
 	if err != nil {
 		return false, err
