@@ -119,7 +119,8 @@ func (s *State) loadContentFromDisk() {
 						log.WithFields(log.Fields{
 							"err":       err,
 							"file_name": fileName,
-						}).Fatal("Error loading asset")
+						}).Warn("Error loading asset")
+						continue
 					}
 					// Create the asset in the website content
 					wc.createAsset(fileName, []byte(b))
@@ -163,7 +164,6 @@ func (s *State) startContentSyncWatcher() {
 				time.Sleep(time.Duration(r.Intn(10)) * time.Second) // Random sleep allow better propogation
 
 				for _, nc := range getContentLocationsFromControld(contentNeeded) {
-					fmt.Println(nc)
 					if len(nc.contentLocations) > 0 {
 						contentLocations := nc.contentLocations
 						contentName := nc.contentName
