@@ -47,6 +47,13 @@ func (p2p *P2PHandler) Connect() {
 		}
 	}
 
+	err := p2p.UpdateField("content_port", p2p.contentPort)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err.Error(),
+		}).Warn("Error getting updating content port")
+	}
+
 	// Once we have successfully connected, start the heartbeat
 	p2p.startHearbeat()
 
@@ -112,14 +119,8 @@ func (p2p *P2PHandler) startHearbeat() {
 			}
 			// If we have detection on, tell the network our IP and handle any failures
 			if !viper.GetBool("DisableIPDiscovery") {
-				err := p2p.UpdateField("content_port", p2p.contentPort)
-				if err != nil {
-					log.WithFields(log.Fields{
-						"err": err.Error(),
-					}).Warn("Error getting updating content port")
-					break
-				}
 				var myIP string
+				var err error
 				if viper.GetString("OverrideIP") == "" {
 					myIP, err = getIP()
 					if err != nil {
