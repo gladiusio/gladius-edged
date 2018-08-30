@@ -47,6 +47,10 @@ func (p2p *P2PHandler) Connect() {
 		}
 	}
 
+	// Once we have successfully connected, start the heartbeat
+	p2p.startHearbeat()
+
+	// Post the content port
 	time.Sleep(5 * time.Second)
 	err := p2p.UpdateField("content_port", p2p.contentPort)
 	if err != nil {
@@ -54,10 +58,6 @@ func (p2p *P2PHandler) Connect() {
 			"err": err.Error(),
 		}).Warn("Error getting updating content port")
 	}
-
-	// Once we have successfully connected, start the heartbeat
-	p2p.startHearbeat()
-
 }
 
 func getIP() (string, error) {
