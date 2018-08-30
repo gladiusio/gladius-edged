@@ -163,29 +163,31 @@ func (s *State) startContentSyncWatcher() {
 				time.Sleep(time.Duration(r.Intn(10)) * time.Second) // Random sleep allow better propogation
 
 				for _, nc := range getContentLocationsFromControld(contentNeeded) {
-					contentLocations := nc.contentLocations
-					contentName := nc.contentName
+					if len(nc.contentLocations) > 0 {
+						contentLocations := nc.contentLocations
+						contentName := nc.contentName
 
-					contentDir, err := getContentDir()
-					if err != nil {
-						log.Fatal("Can't find content dir")
-						return
-					}
+						contentDir, err := getContentDir()
+						if err != nil {
+							log.Fatal("Can't find content dir")
+							return
+						}
 
-					contentURL := contentLocations[r.Intn(len(contentLocations))]
+						contentURL := contentLocations[r.Intn(len(contentLocations))]
 
-					// Create a filepath location from the content name
-					toDownload := filepath.Join(append([]string{contentDir}, strings.Split(contentName, "/")...)...)
+						// Create a filepath location from the content name
+						toDownload := filepath.Join(append([]string{contentDir}, strings.Split(contentName, "/")...)...)
 
-					// Pass in the name so we can verify the hash (filename is the hash)
-					err = downloadFile(toDownload, contentURL, contentName)
-					if err != nil {
-						log.WithFields(log.Fields{
-							"url":      contentURL,
-							"filename": contentName,
-							"path":     toDownload,
-							"err":      err.Error(),
-						}).Warn("Error downloading file from peer")
+						// Pass in the name so we can verify the hash (filename is the hash)
+						err = downloadFile(toDownload, contentURL, contentName)
+						if err != nil {
+							log.WithFields(log.Fields{
+								"url":      contentURL,
+								"filename": contentName,
+								"path":     toDownload,
+								"err":      err.Error(),
+							}).Warn("Error downloading file from peer")
+						}
 					}
 				}
 			}
