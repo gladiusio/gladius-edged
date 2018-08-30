@@ -163,6 +163,7 @@ func (s *State) startContentSyncWatcher() {
 				time.Sleep(time.Duration(r.Intn(10)) * time.Second) // Random sleep allow better propogation
 
 				for _, nc := range getContentLocationsFromControld(contentNeeded) {
+					fmt.Println(nc)
 					if len(nc.contentLocations) > 0 {
 						contentLocations := nc.contentLocations
 						contentName := nc.contentName
@@ -174,6 +175,9 @@ func (s *State) startContentSyncWatcher() {
 						}
 
 						contentURL := contentLocations[r.Intn(len(contentLocations))]
+						log.WithFields(log.Fields{
+							"url": contentURL,
+						}).Debug("Downloading file from peer")
 
 						// Create a filepath location from the content name
 						toDownload := filepath.Join(append([]string{contentDir}, strings.Split(contentName, "/")...)...)
@@ -197,9 +201,14 @@ func (s *State) startContentSyncWatcher() {
 
 // downloadFile will download a url to a local file. It's efficient because it will
 // write as it downloads and not load the whole file into memory.
-func downloadFile(filepath, url, name string) error {
+func downloadFile(toDownload, url, name string) error {
+	err := os.MkdirAll(filepath.Dir(toDownload), os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Create the file
-	out, err := os.Create(filepath)
+	out, err := os.Create(toDownload)
 	if err != nil {
 		return err
 	}
@@ -226,14 +235,14 @@ func downloadFile(filepath, url, name string) error {
 
 	if fmt.Sprintf("%X", h.Sum(nil)) != name {
 		out.Close()
-		os.Remove(filepath)
+		os.Remove(toDownload)
 		return errors.New("incomming file from peer did not match expected hash")
 	}
 
 	log.WithFields(log.Fields{
 		"url":      url,
 		"filename": name,
-		"path":     filepath,
+		"path":     toDownload,
 	}).Debug("A new file was downloaded from a peer")
 	return nil
 }

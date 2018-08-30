@@ -142,12 +142,11 @@ func getContentLocationsFromControld(content []string) []*networkContent {
 
 	// Get all of the files
 	jsonparser.ObjectEach(body, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
-		contentNeeded := make([]string, 0)
-		nc := &networkContent{contentName: string(key), contentLocations: contentNeeded}
+		nc := &networkContent{contentName: string(key), contentLocations: make([]string, 0)}
 
 		// Get all of the links for that file
 		jsonparser.ArrayEach(value, func(v []byte, dataType jsonparser.ValueType, offset int, err error) {
-			contentNeeded = append(contentNeeded, string(v))
+			nc.contentLocations = append(nc.contentLocations, string(v))
 		})
 		// Add this to the network content list
 		ncList = append(ncList, nc)
