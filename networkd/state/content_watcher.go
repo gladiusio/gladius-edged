@@ -212,11 +212,11 @@ func downloadFile(toDownload, url, name string) error {
 	if err != nil {
 		return err
 	}
-	defer out.Close()
 
 	// Get the data
 	resp, err := http.Get(url)
 	if err != nil {
+		out.Close()
 		return err
 	}
 	defer resp.Body.Close()
@@ -224,14 +224,21 @@ func downloadFile(toDownload, url, name string) error {
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
+		out.Close()
 		return err
 	}
 
-	out.Sync()
+	out.Close()
+
+	f, err := os.Open(toDownload + "_temp")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 
 	// Check the hash of the file
 	h := sha256.New()
-	if _, err := io.Copy(h, out); err != nil {
+	if _, err := io.Copy(h, f); err != nil {
 		return err
 	}
 
