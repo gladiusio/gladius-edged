@@ -155,7 +155,7 @@ func (p2p *P2PHandler) UpdateFields(toUpdate map[string]string) error {
 	if err != nil {
 		return errors.New("Input fields can't be marshalled")
 	}
-	updateString := `{"message": {"node": {` + string(fields) + `}}}`
+	updateString := `{"message": {"node": ` + string(fields) + `}}`
 	resp, err := p2p.post("/message/sign", updateString)
 	success, body := getSuccess(resp, err)
 	if !success {
