@@ -183,7 +183,7 @@ func (s *State) startContentSyncWatcher() {
 						toDownload := filepath.Join(append([]string{contentDir}, strings.Split(contentName, "/")...)...)
 
 						// Pass in the name so we can verify the hash (filename is the hash)
-						err = downloadFile(toDownload, contentURL, contentName)
+						err = downloadFile(toDownload, contentURL, strings.Split(contentName, "/")[1])
 						if err != nil {
 							log.WithFields(log.Fields{
 								"url":      contentURL,
@@ -236,10 +236,12 @@ func downloadFile(toDownload, url, name string) error {
 	actualHash := fmt.Sprintf("%X", h.Sum(nil))
 	if actualHash != strings.ToUpper(name) {
 		out.Close()
-		os.Remove(toDownload)
+		os.Remove(toDownload + "_temp")
 		errorString := fmt.Sprintf("incoming file from peer did not match expected hash. Expecting: %s, got: %s", strings.ToUpper(name), actualHash)
 		return errors.New(errorString)
 	}
+
+	os.Rename(toDownload+"_temp", toDownload)
 
 	log.WithFields(log.Fields{
 		"url":      url,
