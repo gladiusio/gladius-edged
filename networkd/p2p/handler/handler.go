@@ -49,15 +49,6 @@ func (p2p *P2PHandler) Connect() {
 
 	// Once we have successfully connected, start the heartbeat
 	p2p.startHearbeat()
-
-	// Post the content port
-	time.Sleep(5 * time.Second)
-	err := p2p.UpdateField("content_port", p2p.contentPort)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err.Error(),
-		}).Warn("Error getting updating content port")
-	}
 }
 
 func getIP() (string, error) {
@@ -79,7 +70,10 @@ func (p2p *P2PHandler) postIP() (bool, error) {
 		myIP = viper.GetString("OverrideIP")
 	}
 
-	err = p2p.UpdateField("ip_address", myIP)
+	toUpdate := make(map[string]string)
+	toUpdate["ip_address"] = myIP
+	toUpdate["disk_content"] = p2p.contentPort
+	err = p2p.UpdateFields(toUpdate)
 	if err != nil {
 		return false, err
 	}
@@ -135,7 +129,6 @@ func (p2p *P2PHandler) startHearbeat() {
 				}
 				// If the IP changed since last time, inform the network
 				if myIP != p2p.ourIP && myIP != "" {
-
 					success, err := p2p.postIP()
 					if err != nil {
 						log.WithFields(log.Fields{
@@ -155,6 +148,34 @@ func (p2p *P2PHandler) startHearbeat() {
 			}
 		}
 	}()
+}
+
+func (p2p *P2PHandler) UpdateFields(toUpdate map[string]string) error {
+	fields, err := json.Marshal(toUpdate)
+	if err != nil {
+		return errors.New("Input fields can't be marshalled")
+	}
+	updateString := `{"message": {"node": {` + string(fields) + `}}}`
+	resp, err := p2p.post("/message/sign", updateString)
+	success, body := getSuccess(resp, err)
+	if !success {
+		return errors.New("Couldn't sign message with contorld, wallet could be locked")
+	}
+
+	// Get the signed message
+	signedMessageBytes, _, _, err := jsonparser.Get(body, "response")
+	if err != nil {
+		return errors.New("Controld returned a corrupted message")
+	}
+
+	// Send the signed message to the p2p network introducing ourselves
+	resp, err = p2p.post("/state/push_message", string(signedMessageBytes))
+	success, _ = getSuccess(resp, err)
+	if !success {
+		return errors.New("Couldn't push message")
+	}
+
+	return nil
 }
 
 // UpdateField updates the specified node field with the value
