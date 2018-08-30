@@ -233,7 +233,7 @@ func downloadFile(toDownload, url, name string) error {
 		log.Fatal(err)
 	}
 
-	if fmt.Sprintf("%X", h.Sum(nil)) != name {
+	if fmt.Sprintf("%X", h.Sum(nil)) != strings.ToUpper(name) {
 		out.Close()
 		os.Remove(toDownload)
 		return errors.New("incomming file from peer did not match expected hash")
