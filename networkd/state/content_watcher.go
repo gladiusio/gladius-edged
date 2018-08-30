@@ -227,6 +227,8 @@ func downloadFile(toDownload, url, name string) error {
 		return err
 	}
 
+	out.Sync()
+
 	// Check the hash of the file
 	h := sha256.New()
 	if _, err := io.Copy(h, out); err != nil {
@@ -236,7 +238,7 @@ func downloadFile(toDownload, url, name string) error {
 	actualHash := fmt.Sprintf("%X", h.Sum(nil))
 	if actualHash != strings.ToUpper(name) {
 		out.Close()
-		os.Remove(toDownload + "_temp")
+		//os.Remove(toDownload + "_temp")
 		errorString := fmt.Sprintf("incoming file from peer did not match expected hash. Expecting: %s, got: %s", strings.ToUpper(name), actualHash)
 		return errors.New(errorString)
 	}
