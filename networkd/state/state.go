@@ -3,37 +3,71 @@
 package state
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
 	"io/ioutil"
-	"log"
-	"math/rand"
 	"net/http"
-	"os"
-	"path"
-	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
+	"github.com/buger/jsonparser"
+	"github.com/gladiusio/gladius-networkd/networkd/p2p/handler"
 	"github.com/gladiusio/gladius-utils/config"
+	log "github.com/sirupsen/logrus"
 )
 
 // New returns a new state struct
-func New(version string) *State {
-	state := &State{running: true, content: make(map[string]([2](map[string][]byte))), runChannel: make(chan bool), version: version}
+func New(p2pHandler *handler.P2PHandler) *State {
+	state := &State{running: true, content: &contentStore{make(map[string]*websiteContent)}, runChannel: make(chan bool), p2p: p2pHandler}
 	state.startContentSyncWatcher()
 	return state
 }
 
 // State is a thread safe struct for keeping information about the networkd
 type State struct {
+	p2p        *handler.P2PHandler
 	running    bool
-	content    map[string]([2](map[string][]byte)) // A map of website to an array of maps, the first being page content, the second being assets
+	content    *contentStore
 	runChannel chan (bool)
-	version    string
 	mux        sync.Mutex
+}
+
+type contentStore struct {
+	websites map[string]*websiteContent
+}
+
+func (c contentStore) getContentList() []string {
+	contentList := make([]string, 0)
+	for websiteName, wc := range c.websites {
+		for assetName := range wc.assets {
+			contentList = append(contentList, strings.Join([]string{websiteName, assetName}, "/"))
+		}
+
+	}
+	return contentList
+}
+
+func (c contentStore) getWebsite(name string) *websiteContent {
+	return c.websites[name]
+}
+
+func (c contentStore) createWebsite(name string) *websiteContent {
+	wc := &websiteContent{make(map[string][]byte)}
+	c.websites[name] = wc
+	return wc
+}
+
+type websiteContent struct {
+	assets map[string][]byte
+}
+
+func (w websiteContent) getAsset(name string) []byte {
+	return w.assets[name]
+}
+
+func (w *websiteContent) createAsset(name string, content []byte) {
+	w.assets[name] = content
 }
 
 type status struct {
@@ -41,212 +75,100 @@ type status struct {
 	Version string
 }
 
-// Content gets the current content in ram
-func (s *State) GetPage(website, route string) []byte {
-	s.mux.Lock()
-	// Lock so only one goroutine at a time can access the map
-	defer s.mux.Unlock()
-	return s.content[website][0][route]
-}
-
 func (s *State) GetAsset(website, asset string) []byte {
 	s.mux.Lock()
 	// Lock so only one goroutine at a time can access the map
 	defer s.mux.Unlock()
-	return s.content[website][1][asset]
-}
-
-// SetContentRunState updates the the desired state of the networking
-func (s *State) SetContentRunState(runState bool) {
-	s.mux.Lock()
-	if s.running != runState {
-		s.running = runState
-		go func() { s.runChannel <- runState }()
-	}
-	s.mux.Unlock()
-}
-
-// RunningStateChanged returns a channel that updates when the running state is
-// changed
-func (s *State) RunningStateChanged() chan (bool) {
-	return s.runChannel
+	return s.content.getWebsite(website).getAsset(asset)
 }
 
 func (s *State) Info() string {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
-	status := &status{Running: s.running, Version: s.version}
+	status := &status{Running: s.running}
 
 	jsonString, _ := json.Marshal(status)
 	return string(jsonString)
 }
 
-// ShouldBeRunning returns the current desired run state of the networking
-func (s *State) ShouldBeRunning() bool {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-	return s.running
+type networkContent struct {
+	contentName      string
+	contentLocations []string
 }
 
-// LoadContentFromDisk loads the content from the disk and stores it in the state
-func (s *State) loadContentFromDisk() {
-	filePath, err := getContentDir()
-	if err != nil {
-		panic(err)
-	}
-
-	files, err := ioutil.ReadDir(filePath)
-	if err != nil {
-		log.Fatal("Error when reading content dir: ", err)
-	}
-	// map websites
-	m := make(map[string]([2](map[string][]byte)))
-
-	for _, f := range files {
-		website := f.Name()
-		if f.IsDir() { /* content */ /* assets */
-			m[website] = [2]map[string][]byte{make(map[string][]byte), make(map[string][]byte)}
-
-			contentFiles, err := ioutil.ReadDir(path.Join(filePath, website))
-			if err != nil {
-				log.Fatal("Error when reading content dir: ", err)
-			}
-			log.Print("Loading website: " + website)
-			for _, contentFile := range contentFiles {
-				// HTML for the page
-				if !contentFile.IsDir() {
-					// Replace "%2f" with "/"
-					replacer := strings.NewReplacer("%2f", "/", "%2F", "/")
-					contentName := contentFile.Name()
-
-					// Create a route name for the mapping
-					routeName := replacer.Replace(contentName)
-
-					// Pull the file
-					b, err := ioutil.ReadFile(path.Join(filePath, website, contentName))
-					if err != nil {
-						log.Fatal(err)
-					}
-					log.Print("Loaded route: " + routeName)
-					m[website][0][routeName] = []byte(b)
-
-					// All of the assets for the site
-				} else if contentFile.Name() == "assets" {
-					assets, err := ioutil.ReadDir(path.Join(filePath, website, "assets"))
-					if err != nil {
-						log.Fatal("Error when reading assets dir: ", err)
-					}
-					for _, asset := range assets {
-						if !asset.IsDir() {
-							// Pull the file
-							b, err := ioutil.ReadFile(path.Join(filePath, website, "assets", asset.Name()))
-							if err != nil {
-								log.Fatal(err)
-							}
-							log.Print("Loaded asset: " + asset.Name())
-							m[website][1][asset.Name()] = []byte(b)
-						}
-					}
-				}
-			}
-		}
-	}
-	s.mux.Lock()
-	s.content = m
-	s.mux.Unlock()
+type contentList struct {
+	Content []string `json:"content"`
 }
 
-func (s *State) startContentSyncWatcher() {
-	// Get the files we have on disk now
-	s.loadContentFromDisk()
-
-	/* If there is new content we need, sleep for a random time then ask which
-	nodes have it in the network, then download it. This allows a semi random
-	propogation so we can minimize individal load on nodes.*/
-	go func() {
-		for {
-			time.Sleep(2 * time.Second)       // Sleep to give the controld a break
-			siteContent := s.getContentList() // Fetch what we have on disk in a format that's understood by the controld
-			contentNeeded := getNeededFromControld(siteContent)
-
-			if len(contentNeeded) > 0 {
-				r := rand.New(rand.NewSource(time.Now().Unix()))
-				time.Sleep(time.Duration(r.Intn(10)) * time.Second) // Random sleep allow better propogation
-
-				for _, contentData := range getContentLocationsFromControld(contentNeeded) {
-					contentURL := contentData[0]
-					contentName := contentData[1]
-
-					contentDir, err := getContentDir()
-					if err != nil {
-						log.Println("Can't find content dir")
-					}
-					// Create a filepath location from the content name
-					toDownload := filepath.Join(append([]string{contentDir}, strings.Split(contentName, "/")...)...)
-					downloadFile(toDownload, contentURL)
-				}
-				s.loadContentFromDisk()
-			}
-		}
-	}()
-}
-
-// downloadFile will download a url to a local file. It's efficient because it will
-// write as it downloads and not load the whole file into memory.
-func downloadFile(filepath string, url string) error {
-
-	// Create the file
-	out, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (c *contentList) Marshal() string {
+	b, _ := json.Marshal(c)
+	return string(b)
 }
 
 // getNeededFromControld asks the controld what we need
-func getNeededFromControld(contentOnDisk []string) []string {
-	return []string{}
+func getNeededFromControld(content []string) []string {
+	c := &contentList{Content: content}
+	resp, err := postToControld("/p2p/state/content_diff", c.Marshal())
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Warn("Problem getting needed content list from control daemon")
+		return []string{}
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	contentNeeded := make([]string, 0)
+	// Get every string in the response (our needed content)
+	jsonparser.ArrayEach(body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		contentNeeded = append(contentNeeded, string(value))
+	}, "response")
+
+	return contentNeeded
 }
 
-func getContentLocationsFromControld(contentNeeded []string) []([]string) {
-	return [][]string{[]string{}}
+// getContentLocationsFromControld gets a list of networkContent objects
+func getContentLocationsFromControld(content []string) []*networkContent {
+	c := &contentList{Content: content}
+	resp, err := postToControld("/p2p/state/content_links", c.Marshal())
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Warn("Problem getting links for needed content from control daemon")
+		return []*networkContent{&networkContent{}}
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	ncList := make([]*networkContent, 0)
+
+	// Get all of the files
+	jsonparser.ObjectEach(body, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+		nc := &networkContent{contentName: string(key), contentLocations: make([]string, 0)}
+
+		// Get all of the links for that file
+		jsonparser.ArrayEach(value, func(v []byte, dataType jsonparser.ValueType, offset int, err error) {
+			nc.contentLocations = append(nc.contentLocations, string(v))
+		})
+		// Add this to the network content list
+		ncList = append(ncList, nc)
+		return nil
+	}, "response")
+
+	return ncList
+}
+
+func postToControld(endpoint, message string) (*http.Response, error) {
+	controldBase := config.GetString("ControldProtocol") + "://" + config.GetString("ControldHostname") + ":" + config.GetString("ControldPort") + "/api"
+	byteMessage := []byte(message)
+	return http.Post(controldBase+endpoint, "application/json", bytes.NewBuffer(byteMessage))
 }
 
 // getContentList returns a list of the content we have on disk in the format of:
-// <website name>/<asset or content>/<fileName>
+// <website name>/<fileName>
 func (s *State) getContentList() []string {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
-	contentList := make([]string, 0)
-
-	for websiteName, websiteData := range s.content {
-		for routeName := range websiteData[0] {
-			contentList = append(contentList, strings.Join([]string{websiteName, "content", routeName}, "/"))
-		}
-		for assetName := range websiteData[1] {
-			contentList = append(contentList, strings.Join([]string{websiteName, "asset", assetName}, "/"))
-		}
-
-	}
-
-	return contentList
+	return s.content.getContentList()
 }
 
 func getContentDir() (string, error) {
