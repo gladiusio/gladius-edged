@@ -56,7 +56,7 @@ func (p2p *P2PHandler) Connect() {
 
 func (p2p *P2PHandler) LeaveIfJoined() {
 	if p2p.joined {
-		p2p.post("/network/leave", joinString)
+		p2p.post("/network/leave", "")
 	}
 }
 
