@@ -22,11 +22,13 @@ func New(controldBase, joinIP, contentPort string) *P2PHandler {
 		connected:    false,
 		joinIP:       joinIP,
 		contentPort:  contentPort,
+		joined:       false,
 	}
 }
 
 // P2PHandler is a type that interfaces with the controld's p2p network
 type P2PHandler struct {
+	joined       bool
 	contentPort  string
 	joinIP       string
 	controldBase string
@@ -45,10 +47,17 @@ func (p2p *P2PHandler) Connect() {
 			go p2p.Connect()
 			return
 		}
+		p2p.joined = true
 	}
 
 	// Once we have successfully connected, start the heartbeat
 	p2p.startHearbeat()
+}
+
+func (p2p *P2PHandler) LeaveIfJoined() {
+	if p2p.joined {
+		p2p.post("/network/leave", joinString)
+	}
 }
 
 func getIP() (string, error) {
