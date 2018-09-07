@@ -16,11 +16,12 @@ import (
 )
 
 // New returns a new P2PHandler object.
-func New(controldBase, joinIP, contentPort string) *P2PHandler {
+func New(controldBase, joinIP, joinPort, contentPort string) *P2PHandler {
 	return &P2PHandler{
 		controldBase: controldBase,
 		connected:    false,
 		joinIP:       joinIP,
+		joinPort:     joinPort,
 		contentPort:  contentPort,
 		joined:       false,
 	}
@@ -31,6 +32,7 @@ type P2PHandler struct {
 	joined       bool
 	contentPort  string
 	joinIP       string
+	joinPort     string
 	controldBase string
 	connected    bool
 	ourIP        string
@@ -40,7 +42,7 @@ type P2PHandler struct {
 func (p2p *P2PHandler) Connect() {
 	// Join the p2p network and handle any failures
 	if !viper.GetBool("DisableAutoJoin") {
-		joinString := `{"ip":"` + p2p.joinIP + `"}`
+		joinString := `{"ip":"kcp://` + p2p.joinIP + ":" + p2p.joinPort + `"}`
 		resp, err := p2p.post("/network/join", joinString)
 		if success, _ := getSuccess(resp, err); !success {
 			time.Sleep(10 * time.Second)
