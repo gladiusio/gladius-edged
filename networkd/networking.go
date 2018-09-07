@@ -1,6 +1,8 @@
 package networkd
 
 import (
+	"os"
+	"os/signal"
 	"strings"
 
 	"github.com/gladiusio/gladius-networkd/networkd/defaults"
@@ -56,7 +58,10 @@ func Run() {
 	// Create a p2p handler
 	controldBase := config.GetString("ControldProtocol") + "://" + config.GetString("ControldHostname") + ":" + config.GetString("ControldPort") + "/api/p2p"
 	// TODO: Get seed node from the blockchain
-	p2pHandler := handler.New(controldBase, config.GetString("P2PSeedNodeAddress"), viper.GetString("ContentPort"))
+	p2pHandler := handler.New(controldBase,
+		config.GetString("P2PSeedNodeAddress"),
+		config.GetString("P2PSeedNodePort"),
+		viper.GetString("ContentPort"))
 	go p2pHandler.Connect()
 
 	// Create new thread safe state of the networkd
@@ -69,6 +74,13 @@ func Run() {
 
 	log.Info("Started HTTP server.")
 
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for _ = range c {
+			p2pHandler.LeaveIfJoined()
+		}
+	}()
 	// Block forever
 	select {}
 }
