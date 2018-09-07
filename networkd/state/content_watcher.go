@@ -51,8 +51,8 @@ func (s *State) startContentFileWatcher() {
 								}).Error("Can't add watcher to website directory")
 							}
 						}
+						s.loadContentFromDisk()
 					}
-					s.loadContentFromDisk()
 				}
 
 			// watch for errors
