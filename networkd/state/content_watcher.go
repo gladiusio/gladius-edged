@@ -50,8 +50,9 @@ func (s *State) startContentFileWatcher() {
 									"directory": event.Name,
 								}).Error("Can't add watcher to website directory")
 							}
+						} else {
+							s.loadContentFromDisk()
 						}
-						s.loadContentFromDisk()
 					}
 				}
 
