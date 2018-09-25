@@ -37,21 +37,19 @@ func (s *State) startContentFileWatcher() {
 					event.Op&fsnotify.Remove == fsnotify.Remove ||
 					event.Op&fsnotify.Rename == fsnotify.Rename {
 					if !strings.Contains(event.Name, "temp") {
-						fi, err := os.Stat(event.Name)
-						if err != nil {
-							log.WithFields(log.Fields{
-								"error": err,
-							}).Error("Error checking if website directory is a directory")
-						}
-						if fi.IsDir() {
-							if err := watcher.Add(event.Name); err != nil {
-								log.WithFields(log.Fields{
-									"error":     err,
-									"directory": event.Name,
-								}).Error("Can't add watcher to website directory")
+						// Get some info about the file (if it exists)
+						fi, fErr := os.Stat(event.Name)
+						if fErr == nil {
+							if fi.IsDir() {
+								if err := watcher.Add(event.Name); err != nil {
+									log.WithFields(log.Fields{
+										"error":     err,
+										"directory": event.Name,
+									}).Error("Can't add watcher to website directory")
+								}
+							} else {
+								s.loadContentFromDisk()
 							}
-						} else {
-							s.loadContentFromDisk()
 						}
 					}
 				}
