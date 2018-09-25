@@ -149,17 +149,28 @@ func (s *State) loadContentFromDisk() {
 			}
 		}
 	}
-	s.mux.Lock()
-	s.content = cs
+	go func() {
+		s.mux.Lock()
+		s.content = cs
 
-	// Tell the controld about our new content
-	err = s.p2p.UpdateField("disk_content", cs.getContentList()...)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err.Error(),
-		}).Warn("Error updating disk content")
-	}
-	s.mux.Unlock()
+		// Tell the controld about our new content
+		err = s.p2p.UpdateField("disk_content", cs.getContentList()...)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err.Error(),
+			}).Warn("Error updating disk content, trying again in a few seconds")
+			time.Sleep(2 * time.Second)
+			err = s.p2p.UpdateField("disk_content", cs.getContentList()...)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err.Error(),
+				}).Warn("Error retrying updating disk content, not trying again.")
+			} else {
+				log.Info("Second disk content update worked!")
+			}
+		}
+		s.mux.Unlock()
+	}()
 }
 
 func (s *State) startContentSyncWatcher() {
