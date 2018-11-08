@@ -1,4 +1,4 @@
-module github.com/gladiusio/gladius-node/src/gladius-edged
+module github.com/gladiusio/gladius-edged
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
@@ -7,7 +7,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gladiusio/gladius-common v0.1.2
 	github.com/gladiusio/gladius-edged v0.0.0-20181107210345-54a1eac11ef9
-	github.com/gladiusio/gladius-networkd v0.0.0-20181107210345-54a1eac11ef9 // indirect
+	github.com/gladiusio/gladius-networkd v0.0.0-20181108183053-c7063c64535d
 	github.com/gladiusio/gladius-utils v0.2.0
 	github.com/jpillora/backoff v0.0.0-20180909062703-3050d21c67d7 // indirect
 	github.com/rdegges/go-ipify v0.0.0-20150526035502-2d94a6a86c40
