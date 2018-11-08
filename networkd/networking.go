@@ -12,8 +12,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"github.com/gladiusio/gladius-utils/config"
-	"github.com/gladiusio/gladius-utils/init/manager"
+	"github.com/gladiusio/gladius-common/config"
+	"github.com/gladiusio/gladius-common/init/manager"
 )
 
 // SetupAndRun runs the networkd as a service

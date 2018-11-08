@@ -4,13 +4,13 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/gladiusio/gladius-utils/config"
+	"github.com/gladiusio/gladius-common/pkg/utils"
 )
 
 // NetworkDaemonDefaults Returns the network daemon's default config.
 func NetworkDaemonDefaults() map[string]string {
 	m := make(map[string]string)
-	base, err := config.GetGladiusBase()
+	base, err := utils.GetGladiusBase()
 	if err != nil {
 		log.Fatal(err)
 	}

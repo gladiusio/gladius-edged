@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gladiusio/gladius-networkd/networkd"
+	"github.com/gladiusio/gladius-edged/networkd"
 )
 
 // Main - entry-point for the service
