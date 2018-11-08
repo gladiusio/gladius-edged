@@ -6,7 +6,7 @@ require (
 	github.com/buger/jsonparser v0.0.0-20181023193515-52c6e1462ebd
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gladiusio/gladius-common v0.1.2
-	github.com/gladiusio/gladius-edged v0.0.0-20181107210345-54a1eac11ef9
+	github.com/gladiusio/gladius-edged v0.0.0-20181108183234-2d7d586a89a6
 	github.com/gladiusio/gladius-networkd v0.0.0-20181108183053-c7063c64535d
 	github.com/gladiusio/gladius-utils v0.2.0
 	github.com/jpillora/backoff v0.0.0-20180909062703-3050d21c67d7 // indirect
