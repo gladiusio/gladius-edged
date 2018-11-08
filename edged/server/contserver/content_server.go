@@ -5,7 +5,7 @@ import (
 	"net"
 
 	"github.com/apex/log"
-	"github.com/gladiusio/gladius-networkd/networkd/state"
+	"github.com/gladiusio/gladius-edged/edged/state"
 	"github.com/valyala/fasthttp"
 )
 

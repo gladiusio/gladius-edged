@@ -45,7 +45,7 @@ all: clean test executable
 clean:
 	rm -rf ./build/*
 	$(GOMOD) go mod tidy
-	$(GOCLEAN)
+	$(GOCLEAN) cmd/gladius-edged/main.go
 
 # test edged
 test: $(NET_SRC)
