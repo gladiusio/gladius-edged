@@ -29,7 +29,7 @@ SRC_DIR=./cmd
 DST_DIR=./build
 
 # source of edged
-NET_SRC=$(SRC_DIR)/gladius-networkd
+NET_SRC=$(SRC_DIR)/gladius-edged
 
 # destination of compiled edged
 NET_DEST=$(DST_DIR)/gladius-edged$(BINARY_SUFFIX)
