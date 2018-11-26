@@ -1,14 +1,14 @@
 // Package state contains a thread safe state struct that stores information
-// about the networkd
+// about the edged
 package state
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
+	"github.com/spf13/viper"
 	"strings"
 	"sync"
 
@@ -24,7 +24,7 @@ func New(p2pHandler *handler.P2PHandler) *State {
 	return state
 }
 
-// State is a thread safe struct for keeping information about the networkd
+// State is a thread safe struct for keeping information about the edged
 type State struct {
 	p2p        *handler.P2PHandler
 	running    bool
