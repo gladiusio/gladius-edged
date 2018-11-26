@@ -37,25 +37,25 @@ func SetupConfig() {
 }
 
 func buildOptions(base string) {
-	// Log options
-	ConfigOption("Log.Level", "info")
-	ConfigOption("Log.Pretty", true)
+	// Content
+	ConfigOption("ContentDirectory", filepath.Join(base, "content"))
+	ConfigOption("ContentPort", "8080")
 
 	// P2P options
-	ConfigOption("P2P.SeedNodeAddress", "165.227.16.209")
-	ConfigOption("P2P.SeedNodePort", "7946")
+	ConfigOption("P2PSeedNodeAddress", "165.227.16.209")
+	ConfigOption("P2PSeedNodePort", "7946")
 
-	// Content options
-	ConfigOption("Content.Port", "8080")
-	ConfigOption("Content.Directory", filepath.Join(base, "content"))
+	// Network Gateway options
+	ConfigOption("ControldHostname", "localhost")
+	ConfigOption("ControldPort", "3001")
+	ConfigOption("ControldProtocol", "http")
 
-	// Edged options
-	ConfigOption("Edged.Hostname", "localhost")
-	ConfigOption("Edged.Port", "3001")
-	ConfigOption("Edged.Protocol", "http")
+	// Logging
+	ConfigOption("LogLevel", "info")
 
 	// Misc.
 	ConfigOption("GladiusBase", base) // Convenient option to have, not needed though
+
 }
 
 func ConfigOption(key string, defaultValue interface{}) string {

@@ -44,7 +44,7 @@ func Run() {
 		viper.GetString("ContentPort"))
 	go p2pHandler.Connect()
 
-	// Create new thread safe state of the edged
+	// Create new thread safe state of the networkd
 	s := state.New(p2pHandler)
 
 	// Create a content server
@@ -57,7 +57,7 @@ func Run() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
-		for _ = range c {
+		for range c {
 			p2pHandler.LeaveIfJoined()
 		}
 	}()

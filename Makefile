@@ -7,8 +7,10 @@
 ##
 
 # commands for go
-GOBUILD=go build
-GOTEST=go test
+GOMOD=GO111MODULE=on
+GOBUILD=$(GOMOD) go build
+GOTEST=$(GOMOD) go test
+GOCLEAN=$(GOMOD) go clean
 
 # if we are running on a windows machine
 # we need to append a .exe to the
@@ -27,7 +29,7 @@ SRC_DIR=./cmd
 DST_DIR=./build
 
 # source of edged
-NET_SRC=$(SRC_DIR)/gladius-networkd
+NET_SRC=$(SRC_DIR)/gladius-edged
 
 # destination of compiled edged
 NET_DEST=$(DST_DIR)/gladius-edged$(BINARY_SUFFIX)
@@ -37,12 +39,13 @@ NET_DEST=$(DST_DIR)/gladius-edged$(BINARY_SUFFIX)
 ##
 
 # default, will be called if no arguments supplied
-all: test executable
+all: clean test executable
 
 # delete anything in the build dir and clean
 clean:
 	rm -rf ./build/*
-	go clean
+	$(GOMOD) go mod tidy
+	$(GOCLEAN) cmd/gladius-edged/main.go
 
 # test edged
 test: $(NET_SRC)
