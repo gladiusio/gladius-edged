@@ -8,12 +8,12 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"github.com/spf13/viper"
 	"strings"
 	"sync"
 
 	"github.com/buger/jsonparser"
 	"github.com/gladiusio/gladius-edged/edged/p2p/handler"
-	"github.com/gladiusio/gladius-utils/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -157,7 +157,7 @@ func getContentLocationsFromControld(content []string) []*networkContent {
 }
 
 func postToControld(endpoint, message string) (*http.Response, error) {
-	controldBase := config.GetString("ControldProtocol") + "://" + config.GetString("ControldHostname") + ":" + config.GetString("ControldPort") + "/api"
+	controldBase := viper.GetString("ControldProtocol") + "://" + viper.GetString("ControldHostname") + ":" + viper.GetString("ControldPort") + "/api"
 	byteMessage := []byte(message)
 	return http.Post(controldBase+endpoint, "application/json", bytes.NewBuffer(byteMessage))
 }
@@ -172,7 +172,7 @@ func (s *State) getContentList() []string {
 }
 
 func getContentDir() (string, error) {
-	contentDir := config.GetString("ContentDirectory")
+	contentDir := viper.GetString("ContentDirectory")
 	if contentDir == "" {
 		return contentDir, errors.New("No content directory specified")
 	}
