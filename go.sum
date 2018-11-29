@@ -20,9 +20,9 @@ github.com/gladiusio/gladius-application-server v0.0.0-20180831154555-75ec8b96ba
 github.com/gladiusio/gladius-cli v0.0.0-20180821194358-283e3c80a6d0/go.mod h1:neMK8iVASsY3DWXW0eJ/qpP/+A47ZkVm3Dd8WX40tA8=
 github.com/gladiusio/gladius-common v0.1.2 h1:JmPlZcdjN640rEZPQeLRkrILjUrZ34qFckDKSByNLAY=
 github.com/gladiusio/gladius-common v0.1.2/go.mod h1:m0CMPVZLow1RexpoD7vbmDf52Tzxz8UsTVoo2AdV5DU=
+github.com/gladiusio/gladius-common v0.1.4/go.mod h1:m0CMPVZLow1RexpoD7vbmDf52Tzxz8UsTVoo2AdV5DU=
 github.com/gladiusio/gladius-controld v0.0.0-20180831225039-43db901bd39d/go.mod h1:7VVUNCjF8sJyi23r0zrvzUO5YSNVRICRxAUvONKx5k0=
 github.com/gladiusio/gladius-p2p v0.0.0-20181008220948-6743a31a69fd/go.mod h1:7JZYgn4qHW/GdTn4YcldQ9Q/vpqGfAGaa08y4xFstqI=
-github.com/gladiusio/gladius-utils v0.2.0 h1:TgaOegPAZSnN+MDnmciP6a2KaHKrZCWF/J7NkY5K4ZE=
 github.com/gladiusio/gladius-utils v0.2.0/go.mod h1:pjJoM/Sm6qM1ou8uz5CalgHdgksyW5ohfDXVL6qIYy0=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
