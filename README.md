@@ -1,70 +1,57 @@
-# Gladius Networkd
+# Gladius Edged
 
-All of the code and resources for running a Gladius content daemon.
-
-## Usage
-
-### Run as a service
-You can also install networkd  as a service, it will use the installing user's
-home folder for the file locations.
-
-```shell
-# install networkd as a service
-gladius-networkd install
-
-# start the networkd service
-gladius-networkd start
-
-# stop the networkd service
-gladius-networkd stop
-```
+All of the code and resources for running a Gladius edge daemon.
 
 ## Setup
 
-#### Test the RPC server (Only Start and Stop work now)
-```bash
-$ HDR1='Content-type: application/json'
-$ HDR2='Accept: application/json'
-
-$ MSG='{"jsonrpc": "2.0", "method": "GladiusEdge.Start", "id": 1}'
-$ curl -H $HDR1 -H $HDR2 -d $MSG http://localhost:5000/rpc
-{"jsonrpc":"2.0","result":"Started server","id":1}
-
-$ MSG='{"jsonrpc": "2.0", "method": "GladiusEdge.Stop", "id": 1}'
-$ curl -H $HDR1 -H $HDR2 -d $MSG http://localhost:5000/rpc
-{"jsonrpc":"2.0","result":"Stopped server","id":1}
-
-$ MSG='{"jsonrpc": "2.0", "method": "GladiusEdge.Status", "id": 1}'
-$ curl -H $HDR1 -H $HDR2 -d $MSG http://localhost:5000/rpc
-{"jsonrpc":"2.0","result":"Server is <status>","id":1}
-```
-
 #### Set up content delivery
 
-Right now files are loaded from `~/.config/gladius/content/<website>` on unix machines and `C:\Users\<user>\.gladius\content\<website>` and take
-the format of `%2froute%2fhere`. The `%2f` is used in place of `/`. Content
-can then be accessed at `http://<host>:8080/content?website=example.com&route=%2Ftest%2Ftest`
+Right now files are loaded from `~/.gladius/content/<website>/asset` on unix machines and `C:\Users\<user>\.gladius\content\<website>\asset` 
 
+#### Config
+This is the default config, you can override it by placing a file called `gladius-edged.toml` in the gladius base. You can also override any config value with an environment var like `EDGED_DISABLEAUTOJOIN=ture`
+```toml
+# Uncomment to override the detected content directory
+# contentdirectory = "/your/path/here"
+
+# What port to serve content on
+contentport = "8080"
+
+# How to reach the network gateway
+networkgateayprotocol = "http"
+networkgatewayhostname = "localhost"
+networkgatewayport = "3001"
+
+# Disable p2p join on start
+disableautojoin = false
+
+# Don't send a keep alive
+disableheartbeat = false
+
+# Change the base directory
+gladiusbase = "/home/alex/.gladius"
+
+# Log level printing
+loglevel = "info"
+
+# Override IP detection and use the IP specified as the accesible address for content
+overrideip = ""
+
+# What node we request to join at startup
+p2pseednodeaddress = "165.227.16.209"
+p2pseednodeport = "7947"
+```
 ## Development
 ### Dependencies
 To test and build the gladius-networkd binary you will need go-dep and make on your machine.
 
 - Install [go](https://golang.org/doc/install)
-- Install [go-dep](https://golang.github.io/dep/docs/installation.html)
+- Enable go modules with `GO111MODULES=on`
 - *Mac Users:* Install xcode for make `xcode-select --install`
 - *Windows Users:* Install [Linux Subsystem](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
-### Install dependencies
-We use [go-dep](https://golang.github.io/dep/docs/installation.html) to manage the go dependencies.
-To install the dependencies you need to execute the `dependencies` target.
-
-```shell
-# install depdencies for the project with go-dep
-make dependencies
-```
-
 ### Build
-To build the networkd binary for your OS and architecture execute `make`.
+To build the edged binary for your OS and architecture execute `make`.
 After the build process you will find all binaries in *./build/*.
 
 
