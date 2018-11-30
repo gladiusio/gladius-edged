@@ -43,7 +43,7 @@ func buildOptions(base string) {
 
 	// P2P options
 	ConfigOption("P2PSeedNodeAddress", "165.227.16.209")
-	ConfigOption("P2PSeedNodePort", "7946")
+	ConfigOption("P2PSeedNodePort", "7947")
 
 	// Network Gateway options
 	ConfigOption("ControldHostname", "localhost")
