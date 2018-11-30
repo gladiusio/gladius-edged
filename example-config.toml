@@ -9,11 +9,21 @@ networkgateayprotocol = "http"
 networkgatewayhostname = "localhost"
 networkgatewayport = "3001"
 
-# 
+# Disable p2p join on start
 disableautojoin = false
+
+# Don't send a keep alive
 disableheartbeat = false
+
+# Change the base directory
 gladiusbase = "/home/alex/.gladius"
+
+# Log level printing
 loglevel = "info"
+
+# Override IP detection and use the IP specified as the accesible address for content
 overrideip = ""
+
+# What node we request to join at startup
 p2pseednodeaddress = "165.227.16.209"
 p2pseednodeport = "7947"
