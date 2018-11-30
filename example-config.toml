@@ -1,0 +1,19 @@
+# Uncomment to override the detected content directory
+# contentdirectory = "/your/path/here"
+
+# What port to serve content on
+contentport = "8080"
+
+# How to reach the network gateway
+networkgateayprotocol = "http"
+networkgatewayhostname = "localhost"
+networkgatewayport = "3001"
+
+# 
+disableautojoin = false
+disableheartbeat = false
+gladiusbase = "/home/alex/.gladius"
+loglevel = "info"
+overrideip = ""
+p2pseednodeaddress = "165.227.16.209"
+p2pseednodeport = "7947"

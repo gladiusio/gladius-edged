@@ -8,9 +8,10 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"github.com/spf13/viper"
 	"strings"
 	"sync"
+
+	"github.com/spf13/viper"
 
 	"github.com/buger/jsonparser"
 	"github.com/gladiusio/gladius-edged/edged/p2p/handler"
@@ -113,7 +114,7 @@ func getNeededFromControld(content []string) []string {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Warn("Problem getting needed content list from control daemon")
+		}).Warn("Problem getting needed content list from network gateway")
 		return []string{}
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -133,7 +134,7 @@ func getContentLocationsFromControld(content []string) []*networkContent {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Warn("Problem getting links for needed content from control daemon")
+		}).Warn("Problem getting links for needed content from network gateway")
 		return []*networkContent{&networkContent{}}
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -157,7 +158,7 @@ func getContentLocationsFromControld(content []string) []*networkContent {
 }
 
 func postToControld(endpoint, message string) (*http.Response, error) {
-	controldBase := viper.GetString("ControldProtocol") + "://" + viper.GetString("ControldHostname") + ":" + viper.GetString("ControldPort") + "/api"
+	controldBase := viper.GetString("NetworkGatewayProtocol") + "://" + viper.GetString("NetworkGatewayHostname") + ":" + viper.GetString("NetworkGatewayPort") + "/api"
 	byteMessage := []byte(message)
 	return http.Post(controldBase+endpoint, "application/json", bytes.NewBuffer(byteMessage))
 }

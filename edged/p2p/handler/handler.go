@@ -42,7 +42,7 @@ type P2PHandler struct {
 func (p2p *P2PHandler) Connect() {
 	// Join the p2p network and handle any failures
 	if !viper.GetBool("DisableAutoJoin") {
-		joinString := `{"ip":"kcp://` + p2p.joinIP + ":" + p2p.joinPort + `"}`
+		joinString := `{"ip":"` + p2p.joinIP + ":" + p2p.joinPort + `"}`
 		resp, err := p2p.post("/network/join", joinString)
 		if success, _ := getSuccess(resp, err); !success {
 			time.Sleep(10 * time.Second)
@@ -220,13 +220,13 @@ func (p2p *P2PHandler) UpdateField(key string, value ...string) error {
 	resp, err := p2p.post("/message/sign", updateString)
 	success, body := getSuccess(resp, err)
 	if !success {
-		return errors.New("Couldn't sign message with contorld, wallet could be locked")
+		return errors.New("Couldn't sign message with network gateway, wallet could be locked")
 	}
 
 	// Get the signed message
 	signedMessageBytes, _, _, err := jsonparser.Get(body, "response")
 	if err != nil {
-		return errors.New("Controld returned a corrupted message")
+		return errors.New("The network gateway returned a corrupted message")
 	}
 
 	// Send the signed message to the p2p network introducing ourselves

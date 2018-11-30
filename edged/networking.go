@@ -36,7 +36,7 @@ func Run() {
 	log.Info("Starting content server on port: " + viper.GetString("ContentPort"))
 
 	// Create a p2p handler
-	controldBase := viper.GetString("ControldProtocol") + "://" + viper.GetString("ControldHostname") + ":" + viper.GetString("ControldPort") + "/api/p2p"
+	controldBase := viper.GetString("NetworkGatewayProtocol") + "://" + viper.GetString("NetworkGatewayHostname") + ":" + viper.GetString("NetworkGatewayPort") + "/api/p2p"
 	// TODO: Get seed node from the blockchain
 	p2pHandler := handler.New(controldBase,
 		viper.GetString("P2PSeedNodeAddress"),

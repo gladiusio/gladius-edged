@@ -44,11 +44,14 @@ func buildOptions(base string) {
 	// P2P options
 	ConfigOption("P2PSeedNodeAddress", "165.227.16.209")
 	ConfigOption("P2PSeedNodePort", "7947")
+	ConfigOption("DisableAutoJoin", false)
+	ConfigOption("OverrideIP", "")
+	ConfigOption("DisableHeartbeat", false)
 
 	// Network Gateway options
-	ConfigOption("ControldHostname", "localhost")
-	ConfigOption("ControldPort", "3001")
-	ConfigOption("ControldProtocol", "http")
+	ConfigOption("NetworkGatewayHostname", "localhost")
+	ConfigOption("NetworkGatewayPort", "3001")
+	ConfigOption("NetworkGatewayProtocol", "http")
 
 	// Logging
 	ConfigOption("LogLevel", "info")
@@ -56,6 +59,7 @@ func buildOptions(base string) {
 	// Misc.
 	ConfigOption("GladiusBase", base) // Convenient option to have, not needed though
 
+	viper.WriteConfigAs("./config.toml")
 }
 
 func ConfigOption(key string, defaultValue interface{}) string {
