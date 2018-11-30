@@ -58,8 +58,6 @@ func buildOptions(base string) {
 
 	// Misc.
 	ConfigOption("GladiusBase", base) // Convenient option to have, not needed though
-
-	viper.WriteConfigAs("./config.toml")
 }
 
 func ConfigOption(key string, defaultValue interface{}) string {
