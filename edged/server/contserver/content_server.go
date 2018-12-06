@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/apex/log"
+	"github.com/rs/zerolog/log"
 	"github.com/gladiusio/gladius-edged/edged/state"
 	"github.com/valyala/fasthttp"
 )
@@ -30,9 +30,7 @@ func (cs *ContentServer) Start() {
 		var err error
 		cs.contentListener, err = net.Listen("tcp", ":"+cs.port)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err.Error(),
-			}).Fatal("Error binding to port... exiting")
+			log.Fatal().Err(err).Msg("Error binding to port... exiting")
 		}
 		// Create a content server
 		server := fasthttp.Server{Handler: requestHandler(cs.state)}

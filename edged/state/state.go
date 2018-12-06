@@ -15,7 +15,7 @@ import (
 
 	"github.com/buger/jsonparser"
 	"github.com/gladiusio/gladius-edged/edged/p2p/handler"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 // New returns a new state struct
@@ -112,9 +112,7 @@ func getNeededFromControld(content []string) []string {
 	c := &contentList{Content: content}
 	resp, err := postToControld("/p2p/state/content_diff", c.Marshal())
 	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Warn("Problem getting needed content list from network gateway")
+		log.Warn().Err(err).Msg("Problem getting needed content list from network gateway")
 		return []string{}
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -132,9 +130,7 @@ func getContentLocationsFromControld(content []string) []*networkContent {
 	c := &contentList{Content: content}
 	resp, err := postToControld("/p2p/state/content_links", c.Marshal())
 	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Warn("Problem getting links for needed content from network gateway")
+		log.Warn().Err(err).Msg("Problem getting links for needed content from network gateway")
 		return []*networkContent{&networkContent{}}
 	}
 	body, _ := ioutil.ReadAll(resp.Body)

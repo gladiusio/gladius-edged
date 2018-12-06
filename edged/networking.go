@@ -3,37 +3,29 @@ package edged
 import (
 	"os"
 	"os/signal"
+	"strings"
 
 	"github.com/gladiusio/gladius-edged/edged/config"
 	"github.com/gladiusio/gladius-edged/edged/p2p/handler"
 	"github.com/gladiusio/gladius-edged/edged/server/contserver"
 	"github.com/gladiusio/gladius-edged/edged/state"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
 // Run - Start a web server
 func Run() {
-	log.Info("Loading config")
-
 	// Setup config handling
-	config.SetupConfig()
+	message, err := config.SetupConfig()
 
-	// Setup logging level
-	switch loglevel := viper.GetString("LogLevel"); loglevel {
-	case "debug":
-		log.SetLevel(log.DebugLevel)
-	case "warning":
-		log.SetLevel(log.WarnLevel)
-	case "info":
-		log.SetLevel(log.InfoLevel)
-	case "error":
-		log.SetLevel(log.ErrorLevel)
-	default:
-		log.SetLevel(log.InfoLevel)
+	setupLogger()
+
+	if err != nil {
+		log.Warn().Msg(message)
 	}
 
-	log.Info("Starting content server on port: " + viper.GetString("ContentPort"))
+	log.Info().Msg("Starting content server on port: " + viper.GetString("ContentPort"))
 
 	// Create a p2p handler
 	controldBase := viper.GetString("NetworkGatewayProtocol") + "://" + viper.GetString("NetworkGatewayHostname") + ":" + viper.GetString("NetworkGatewayPort") + "/api/p2p"
@@ -52,7 +44,7 @@ func Run() {
 	cs.Start()
 	defer cs.Stop()
 
-	log.Info("Started HTTP server.")
+	log.Info().Msg("Started HTTP server.")
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -60,4 +52,30 @@ func Run() {
 	<-c
 
 	p2pHandler.LeaveIfJoined()
+}
+
+func setupLogger() {
+	// Setup logging level
+	switch loglevel := viper.GetString("Log.Level"); strings.ToLower(loglevel) {
+	case "debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case "warning":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "error":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "fatal":
+		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	case "panic":
+		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+	case "disabled":
+		zerolog.SetGlobalLevel(zerolog.Disabled)
+	default:
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	}
+
+	if !viper.IsSet("Log.Pretty") || (viper.IsSet("Log.Pretty") && viper.GetBool("Log.Pretty")) {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
 }
