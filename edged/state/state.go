@@ -80,7 +80,11 @@ func (s *State) GetAsset(website, asset string) []byte {
 	s.mux.Lock()
 	// Lock so only one goroutine at a time can access the map
 	defer s.mux.Unlock()
-	return s.content.getWebsite(website).getAsset(asset)
+	w := s.content.getWebsite(website)
+	if w != nil {
+		return w.getAsset(asset)
+	}
+	return nil
 }
 
 func (s *State) Info() string {

@@ -78,8 +78,14 @@ func contentHandler(ctx *fasthttp.RequestCtx, s *state.State) {
 	asset := string(ctx.QueryArgs().Peek("asset"))
 
 	if asset != "" {
-		ctx.SetStatusCode(fasthttp.StatusOK)
-		ctx.Write(s.GetAsset(website, asset))
+		a := s.GetAsset(website, asset)
+		if a != nil && len(a) > 0 {
+			ctx.SetStatusCode(fasthttp.StatusOK)
+			ctx.Write(a)
+		} else {
+			ctx.SetStatusCode(fasthttp.StatusNotFound)
+			ctx.Write([]byte("404 - Asset not found"))
+		}
 	} else {
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		ctx.Write([]byte(`Must specify asset in URL, like /content?website=REQUESTED_SITE&asset=FILE_HASH`))
