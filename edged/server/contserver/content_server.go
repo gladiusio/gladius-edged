@@ -82,7 +82,7 @@ func contentHandler(ctx *fasthttp.RequestCtx, s *state.State) {
 		ctx.Write(s.GetAsset(website, asset))
 	} else {
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.Write([]byte(`Must specify asset in URL, like /content?website=REQUESTED_SITE?asset=FILE_HASH`))
+		ctx.Write([]byte(`Must specify asset in URL, like /content?website=REQUESTED_SITE&asset=FILE_HASH`))
 	}
 }
 
