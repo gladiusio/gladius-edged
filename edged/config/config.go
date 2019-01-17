@@ -5,15 +5,14 @@ import (
 	"strings"
 
 	"github.com/gladiusio/gladius-common/pkg/utils"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
 // SetupConfig sets up viper and adds our config options
-func SetupConfig() {
+func SetupConfig() (string, error) {
 	base, err := utils.GetGladiusBase()
 	if err != nil {
-		log.Warn().Err(err).Msg("Error retrieving base directory")
+		return "Error retrieving base directory", err
 	}
 
 	// Add config file name and searching
@@ -28,12 +27,15 @@ func SetupConfig() {
 
 	// Load config
 	err = viper.ReadInConfig()
+	var message = "Using provided config file and overriding defaults"
 	if err != nil {
-		log.Warn().Err(err).Msg("Error reading config file, it may not exist or is corrupted. Using defaults.")
+		message = "Error reading config file, it may not exist or is corrupted. Using defaults."
 	}
 
 	// Build our config options
 	buildOptions(base)
+
+	return message, err
 }
 
 func buildOptions(base string) {

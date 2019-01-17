@@ -15,16 +15,14 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 func (s *State) startContentFileWatcher() {
 	// creates a new file watcher
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Error("Can't add watcher to content directory")
+		log.Error().Err(err).Msg("Can't add watcher to content directory")
 		defer watcher.Close()
 	}
 	done := make(chan bool)
@@ -42,10 +40,10 @@ func (s *State) startContentFileWatcher() {
 						if fErr == nil {
 							if fi.IsDir() {
 								if err := watcher.Add(event.Name); err != nil {
-									log.WithFields(log.Fields{
-										"error":     err,
-										"directory": event.Name,
-									}).Error("Can't add watcher to website directory")
+									log.Error().
+										Err(err).
+										Str("directory", event.Name).
+										Msg("Can't add watcher to website directory")
 								}
 							} else {
 								s.loadContentFromDisk()
@@ -57,9 +55,9 @@ func (s *State) startContentFileWatcher() {
 			// watch for errors
 			case watchErr := <-watcher.Errors:
 				if watchErr != nil {
-					log.WithFields(log.Fields{
-						"error": watchErr,
-					}).Error("Error watching content direcory")
+					log.Error().
+						Err(watchErr).
+						Msg("Error watching content directory")
 				}
 			}
 		}
@@ -68,26 +66,26 @@ func (s *State) startContentFileWatcher() {
 	// out of the box fsnotify can watch a single file, or a single directory
 	filePath, err := getContentDir()
 	if err != nil {
-		log.Fatal("Error getting content dir", err)
+		log.Fatal().Err(err).Msg("Error getting content dir")
 	}
 	files, err := ioutil.ReadDir(filePath)
 	if err != nil {
-		log.Fatal("Error when reading content dir: ", err)
+		log.Fatal().Err(err).Msg("Error when reading content dir")
 	}
 	if err := watcher.Add(filePath); err != nil {
-		log.WithFields(log.Fields{
-			"error":     err,
-			"directory": filePath,
-		}).Error("Can't add watcher to content directory")
+		log.Error().
+			Err(err).
+			Str("directory", filePath).
+			Msg("Can't add watcher to content directory")
 	}
 	for _, f := range files {
 		website := f.Name()
 		if f.IsDir() {
 			if err := watcher.Add(path.Join(filePath, website)); err != nil {
-				log.WithFields(log.Fields{
-					"error":     err,
-					"directory": path.Join(filePath, website),
-				}).Error("Can't add watcher to website directory")
+				log.Error().
+					Err(err).
+					Str("directory", path.Join(filePath, website)).
+					Msg("Can't add watcher to website directory")
 			}
 		}
 	}
@@ -99,12 +97,12 @@ func (s *State) startContentFileWatcher() {
 func (s *State) loadContentFromDisk() {
 	filePath, err := getContentDir()
 	if err != nil {
-		log.Fatal("Error getting content dir", err)
+		log.Fatal().Err(err).Msg("Error getting content dir")
 	}
 
 	files, err := ioutil.ReadDir(filePath)
 	if err != nil {
-		log.Fatal("Error when reading content dir: ", err)
+		log.Fatal().Err(err).Msg("Error when reading content dir")
 	}
 	// map websites
 	cs := &contentStore{make(map[string]*websiteContent)}
@@ -118,11 +116,11 @@ func (s *State) loadContentFromDisk() {
 			// Get all of the files for that website
 			websiteFiles, err := ioutil.ReadDir(path.Join(filePath, website))
 			if err != nil {
-				log.Fatal("Error when reading content dir: ", err)
+				log.Fatal().Err(err).Msg("Error when reading content dir")
 			}
-			log.WithFields(log.Fields{
-				"website": website,
-			}).Debug("Loading website: " + website)
+
+			log.Debug().Str("website", website).Msg("Loading website: " + website)
+
 			for _, websiteFile := range websiteFiles {
 				// Ignore subdirecories
 				if !websiteFile.IsDir() && !strings.Contains(websiteFile.Name(), "temp") {
@@ -131,18 +129,15 @@ func (s *State) loadContentFromDisk() {
 					// Pull the file
 					b, err := ioutil.ReadFile(path.Join(filePath, website, fileName))
 					if err != nil {
-						log.WithFields(log.Fields{
-							"err":       err,
-							"file_name": fileName,
-						}).Warn("Error loading asset")
+						log.Warn().
+							Str("file_name", fileName).
+							Err(err).
+							Msg("Error loading asset")
 						continue
 					}
 					// Create the asset in the website content
 					wc.createAsset(fileName, []byte(b))
-					log.WithFields(log.Fields{
-						"asset_name": fileName,
-					}).Debug("Loaded new asset")
-
+					log.Debug().Str("asset_name", fileName).Msg("Loaded new asset")
 				}
 			}
 		}
@@ -154,17 +149,13 @@ func (s *State) loadContentFromDisk() {
 		// Tell the controld about our new content
 		err = s.p2p.UpdateField("disk_content", cs.getContentList()...)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err.Error(),
-			}).Warn("Error updating disk content, trying again in a few seconds")
+			log.Warn().Err(err).Msg("Error updating disk content, trying again in a few seconds")
 			time.Sleep(2 * time.Second)
 			err = s.p2p.UpdateField("disk_content", cs.getContentList()...)
 			if err != nil {
-				log.WithFields(log.Fields{
-					"err": err.Error(),
-				}).Warn("Error retrying updating disk content, not trying again.")
+				log.Warn().Err(err).Msg("Error retrying updating disk content, not trying again.")
 			} else {
-				log.Info("Second disk content update worked!")
+				log.Info().Msg("Second disk content update worked!")
 			}
 		}
 		s.mux.Unlock()
@@ -196,14 +187,12 @@ func (s *State) startContentSyncWatcher() {
 
 						contentDir, err := getContentDir()
 						if err != nil {
-							log.Fatal("Can't find content dir")
+							log.Fatal().Err(err).Msg("Can't find content dir")
 							return
 						}
 
 						contentURL := contentLocations[r.Intn(len(contentLocations))]
-						log.WithFields(log.Fields{
-							"url": contentURL,
-						}).Debug("Downloading file from peer")
+						log.Debug().Str("url", contentURL).Msg("Downloading file from peer")
 
 						// Create a filepath location from the content name
 						toDownload := filepath.Join(append([]string{contentDir}, strings.Split(contentName, "/")...)...)
@@ -211,12 +200,12 @@ func (s *State) startContentSyncWatcher() {
 						// Pass in the name so we can verify the hash (filename is the hash)
 						err = downloadFile(toDownload, contentURL, strings.Split(contentName, "/")[1])
 						if err != nil {
-							log.WithFields(log.Fields{
-								"url":      contentURL,
-								"filename": contentName,
-								"path":     toDownload,
-								"err":      err.Error(),
-							}).Warn("Error downloading file from peer")
+							log.Warn().
+								Str("url", contentURL).
+								Str("filename", contentName).
+								Str("path", toDownload).
+								Err(err).
+								Msg("Error downloading file from peer")
 						}
 					}
 				}
@@ -230,7 +219,7 @@ func (s *State) startContentSyncWatcher() {
 func downloadFile(toDownload, url, name string) error {
 	err := os.MkdirAll(filepath.Dir(toDownload), os.ModePerm)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 
 	// Create the file
@@ -277,11 +266,10 @@ func downloadFile(toDownload, url, name string) error {
 	}
 
 	os.Rename(toDownload+"_temp", toDownload)
-
-	log.WithFields(log.Fields{
-		"url":      url,
-		"filename": name,
-		"path":     toDownload,
-	}).Debug("A new file was downloaded from a peer")
+	log.Debug().
+		Str("url", url).
+		Str("filename", name).
+		Str("path", toDownload).
+		Msg("A new file was downloaded from a peer")
 	return nil
 }
