@@ -56,7 +56,8 @@ func buildOptions(base string) {
 	ConfigOption("NetworkGatewayProtocol", "http")
 
 	// Logging
-	ConfigOption("LogLevel", "info")
+	ConfigOption("Log.Level", "debug")
+	ConfigOption("Log.Pretty", true)
 
 	// Misc.
 	ConfigOption("GladiusBase", base) // Convenient option to have, not needed though
