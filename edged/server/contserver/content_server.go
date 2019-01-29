@@ -3,10 +3,11 @@ package contserver
 import (
 	"crypto/tls"
 	"fmt"
+	"net"
+
 	"github.com/apex/log"
 	"github.com/gladiusio/gladius-edged/edged/state"
 	"github.com/valyala/fasthttp"
-	"net"
 )
 
 // ContentServer is a server that serves the gladius content from the state
@@ -29,16 +30,6 @@ func New(state *state.State, port string) *ContentServer {
 func (cs *ContentServer) Start() {
 	if !cs.running {
 		var err error
-		cs.contentListener, err = net.Listen("tcp", ":"+cs.port)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err.Error(),
-			}).Fatal("Error binding to port... exiting")
-		}
-
-		// Create a content server
-		server := fasthttp.Server{Handler: requestHandler(cs.state)}
-		go server.Serve(cs.contentListener)
 
 		// Listen on TLS
 		cer, err := tls.LoadX509KeyPair("server.crt", "server.key")
@@ -49,7 +40,7 @@ func (cs *ContentServer) Start() {
 		}
 
 		config := &tls.Config{Certificates: []tls.Certificate{cer}}
-		cs.tlsListener, err = tls.Listen("tcp", ":8081", config)
+		cs.tlsListener, err = tls.Listen("tcp", ":"+cs.port, config)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"err": err.Error(),
