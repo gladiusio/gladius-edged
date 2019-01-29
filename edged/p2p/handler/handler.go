@@ -47,6 +47,7 @@ func (p2p *P2PHandler) Connect() {
 		joinString := `{"ip":"` + p2p.joinIP + ":" + p2p.joinPort + `"}`
 		resp, err := p2p.post("/network/join", joinString)
 		if success, _ := getSuccess(resp, err); !success {
+			log.Warn().Err(err).Msg("Error joining p2p network, trying again in 10 seconds")
 			time.Sleep(10 * time.Second)
 			go p2p.Connect()
 			return
