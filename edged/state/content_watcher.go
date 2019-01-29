@@ -143,6 +143,8 @@ func (s *State) loadContentFromDisk() {
 		}
 	}
 	go func() {
+		s.p2p.BlockUntilJoined()
+
 		s.mux.Lock()
 		s.content = cs
 
