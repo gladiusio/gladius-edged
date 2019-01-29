@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 
@@ -176,6 +177,15 @@ func getContentDir() (string, error) {
 	contentDir := viper.GetString("ContentDirectory")
 	if contentDir == "" {
 		return contentDir, errors.New("No content directory specified")
+	} else {
+		if _, err := os.Stat(contentDir); os.IsNotExist(err) {
+			err := os.MkdirAll(contentDir, os.ModePerm)
+			if err != nil {
+				log.Error().Err(err).Msg("Could not create content directory")
+				return "", errors.New("Could not create content directory")
+			}
+			return contentDir, nil
+		}
 	}
 	return contentDir, nil
 }
