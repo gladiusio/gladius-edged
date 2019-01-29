@@ -143,6 +143,7 @@ func (s *State) loadContentFromDisk() {
 		}
 	}
 	go func() {
+		// Wait until we have joined the network before we try to update our content
 		s.p2p.BlockUntilJoined()
 
 		s.mux.Lock()
