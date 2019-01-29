@@ -11,7 +11,7 @@ import (
 
 	"github.com/buger/jsonparser"
 	ipify "github.com/rdegges/go-ipify"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -72,9 +72,7 @@ func (p2p *P2PHandler) postIP() (bool, error) {
 	if viper.GetString("OverrideIP") == "" {
 		myIP, err = getIP()
 		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err.Error(),
-			}).Warn("Error getting public IP address")
+			log.Warn().Err(err).Msg("Error getting public IP address")
 			return false, err
 		}
 	} else {
@@ -98,7 +96,7 @@ func getSuccess(resp *http.Response, err error) (bool, []byte) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	success, err := jsonparser.GetBoolean(body, "success")
 	if !success || err != nil {
-		log.Debug("Success was false, this was the body: " + string(body))
+		log.Debug().Msg("Success was false, this was the body: " + string(body))
 		return false, []byte{}
 	}
 	return true, body
@@ -110,7 +108,7 @@ func (p2p *P2PHandler) post(endpoint, message string) (*http.Response, error) {
 }
 
 func (p2p *P2PHandler) startHearbeat() {
-	log.Debug("Started heartbeat")
+	log.Debug().Msg("Started heartbeat")
 	go func() {
 		for {
 			time.Sleep(5 * time.Second)
@@ -118,9 +116,7 @@ func (p2p *P2PHandler) startHearbeat() {
 			if !viper.GetBool("DisableHeartbeat") {
 				err := p2p.UpdateField("heartbeat", strconv.FormatInt(time.Now().Unix(), 10))
 				if err != nil {
-					log.WithFields(log.Fields{
-						"err": err.Error(),
-					}).Warn("Error posting heartbeat")
+					log.Warn().Err(err).Msg("Error posting heartbeat")
 				}
 			}
 			// If we have detection on, tell the network our IP and handle any failures
@@ -130,9 +126,7 @@ func (p2p *P2PHandler) startHearbeat() {
 				if viper.GetString("OverrideIP") == "" {
 					myIP, err = getIP()
 					if err != nil {
-						log.WithFields(log.Fields{
-							"err": err.Error(),
-						}).Warn("Error getting public IP address")
+						log.Warn().Err(err).Msg("Error getting public IP address")
 						break
 					}
 				} else {
@@ -142,15 +136,10 @@ func (p2p *P2PHandler) startHearbeat() {
 				if myIP != p2p.ourIP && myIP != "" {
 					success, err := p2p.postIP()
 					if err != nil {
-						log.WithFields(log.Fields{
-							"detected_ip": myIP,
-							"err":         err,
-						}).Error("Error updating this node's public IP in network state")
+						log.Error().Str("detected_ip", myIP).Err(err).Msg("Error updating this node's public IP in network state")
 					}
 					if !success {
-						log.WithFields(log.Fields{
-							"detected_ip": myIP,
-						}).Warn("Error updating this node's public IP in network state")
+						log.Warn().Str("detected_ip", myIP).Err(err).Msg("Error updating this node's public IP in network state")
 					} else {
 						// If successfull, update the local state's IP so we can detect changes
 						p2p.ourIP = myIP

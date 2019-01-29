@@ -1,0 +1,17 @@
+# Ignore hidden files and folders
+.*/
+.*
+
+# Ignore config files
+*.json
+*.toml
+*file
+
+# Ignore Unused Folders
+gladius/
+tests/
+
+# Ignore Unused Files
+LICENSE
+release-all.sh
+README.md

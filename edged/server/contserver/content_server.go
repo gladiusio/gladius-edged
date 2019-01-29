@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/apex/log"
 	"github.com/gladiusio/gladius-edged/edged/state"
+	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 )
 
@@ -34,17 +34,13 @@ func (cs *ContentServer) Start() {
 		// Listen on TLS
 		cer, err := tls.LoadX509KeyPair("server.crt", "server.key")
 		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err.Error(),
-			}).Fatal("Error loading certificate")
+			log.Fatal().Err(err).Msg("Error loading certificate")
 		}
 
 		config := &tls.Config{Certificates: []tls.Certificate{cer}}
 		cs.tlsListener, err = tls.Listen("tcp", ":"+cs.port, config)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err.Error(),
-			}).Fatal("Error starting TLS server")
+			log.Fatal().Err(err).Msg("Error starting TLS server on address")
 		}
 
 		// Listen for http over tls connection
