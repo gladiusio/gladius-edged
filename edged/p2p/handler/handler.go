@@ -53,7 +53,12 @@ func (p2p *P2PHandler) Connect() {
 			return
 		}
 		p2p.joined = true
-		close(p2p.joinChan)
+
+		// Give the p2p network a few seconds to connect, then say we're ready
+		go func() {
+			time.Sleep(5 * time.Second)
+			close(p2p.joinChan)
+		}()
 	}
 
 	// Once we have successfully connected, start the heartbeat
