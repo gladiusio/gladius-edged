@@ -7,3 +7,4 @@ RUN cd /src && go build -tags netgo -a -v -o gladius-edged -i cmd/gladius-edged/
 FROM alpine
 WORKDIR /app
 COPY --from=build-env /src/gladius-edged /app/
+ENTRYPOINT ./gladius-edged
