@@ -51,6 +51,8 @@ To test and build the gladius-networkd binary you will need go-dep and make on y
 - *Windows Users:* Install [Linux Subsystem](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
 
 ### Build
+If you updated the certificate files, run `packr`. You can learn how to install it [here](https://github.com/gobuffalo/packr)
+
 To build the edged binary for your OS and architecture execute `make`.
 After the build process you will find all binaries in *./build/*.
 

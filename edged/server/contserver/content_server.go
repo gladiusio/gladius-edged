@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/gladiusio/gladius-edged/edged/state"
+	"github.com/gobuffalo/packr"
 	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 )
@@ -31,8 +32,19 @@ func (cs *ContentServer) Start() {
 	if !cs.running {
 		var err error
 
+		box := packr.NewBox("./keys")
+		cert, err := box.Find("cert.pem")
+		if err != nil {
+			log.Fatal().Err(err).Msg("Error loading certificate")
+		}
+
+		privKey, err := box.Find("privkey.pem")
+		if err != nil {
+			log.Fatal().Err(err).Msg("Error loading private key (tls)")
+		}
+
 		// Listen on TLS
-		cer, err := tls.LoadX509KeyPair("server.crt", "server.key")
+		cer, err := tls.X509KeyPair(cert, privKey)
 		if err != nil {
 			log.Fatal().Err(err).Msg("Error loading certificate")
 		}
