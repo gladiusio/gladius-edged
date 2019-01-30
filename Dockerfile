@@ -6,5 +6,6 @@ RUN cd /src && go build -tags netgo -a -v -o gladius-edged -i cmd/gladius-edged/
 # final stage
 FROM alpine
 WORKDIR /app
+VOLUME /root/.gladius
 COPY --from=build-env /src/gladius-edged /app/
 ENTRYPOINT ./gladius-edged
