@@ -84,7 +84,7 @@ func requestHandler(s *state.State) func(ctx *fasthttp.RequestCtx) {
 		case "/status":
 			fmt.Fprintf(ctx, s.Info())
 		case "/version":
-			fmt.Fprint(ctx, `{"response":{"version":"0.7.2"}}`)
+			fmt.Fprint(ctx, `{"response":{"version":"0.8.0"}}`)
 		default:
 			ctx.Error("Unsupported path", fasthttp.StatusNotFound)
 		}
