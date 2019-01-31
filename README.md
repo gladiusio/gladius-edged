@@ -1,6 +1,6 @@
 # Gladius Edged
 
-The Gladius Edge Daemon serves static content to a web browser over a TLS connection. See the main [gladius-node](https://github.com/gladiusio/gladius-node) repository to see more.
+The Gladius Edge Daemon serves static content to a web browser. See the main [gladius-node](https://github.com/gladiusio/gladius-node) repository to see more.
 
 ## Docker
 Running the Edge Daemon in a docker container

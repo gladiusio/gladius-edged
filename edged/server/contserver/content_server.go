@@ -1,11 +1,13 @@
 package contserver
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net"
 
-	"github.com/rs/zerolog/log"
 	"github.com/gladiusio/gladius-edged/edged/state"
+	"github.com/gobuffalo/packr"
+	"github.com/rs/zerolog/log"
 	"github.com/valyala/fasthttp"
 )
 
@@ -14,6 +16,7 @@ type ContentServer struct {
 	running         bool
 	port            string
 	contentListener net.Listener
+	tlsListener     net.Listener
 	state           *state.State
 }
 
@@ -28,15 +31,33 @@ func New(state *state.State, port string) *ContentServer {
 func (cs *ContentServer) Start() {
 	if !cs.running {
 		var err error
-		cs.contentListener, err = net.Listen("tcp", ":"+cs.port)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Error binding to port... exiting")
-		}
-		// Create a content server
-		server := fasthttp.Server{Handler: requestHandler(cs.state)}
 
-		// Serve the content
-		go server.Serve(cs.contentListener)
+		box := packr.NewBox("./keys")
+		cert, err := box.Find("cert.pem")
+		if err != nil {
+			log.Fatal().Err(err).Msg("Error loading certificate")
+		}
+
+		privKey, err := box.Find("privkey.pem")
+		if err != nil {
+			log.Fatal().Err(err).Msg("Error loading private key (tls)")
+		}
+
+		// Listen on TLS
+		cer, err := tls.X509KeyPair(cert, privKey)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Error loading certificate")
+		}
+
+		config := &tls.Config{Certificates: []tls.Certificate{cer}}
+		cs.tlsListener, err = tls.Listen("tcp", ":"+cs.port, config)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Error starting TLS server on address")
+		}
+
+		// Listen for http over tls connection
+		tlsServer := fasthttp.Server{Handler: requestHandler(cs.state)}
+		go tlsServer.Serve(cs.tlsListener)
 
 		cs.running = true
 	}
