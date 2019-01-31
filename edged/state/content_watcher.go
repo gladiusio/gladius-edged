@@ -143,6 +143,9 @@ func (s *State) loadContentFromDisk() {
 		}
 	}
 	go func() {
+		// Wait until we have joined the network before we try to update our content
+		s.p2p.BlockUntilJoined()
+
 		s.mux.Lock()
 		s.content = cs
 
@@ -171,6 +174,8 @@ func (s *State) startContentSyncWatcher() {
 	nodes have it in the network, then download it from a random one. This allows
 	a semi random	propogation so we can minimize individal load on nodes.*/
 	go func() {
+		// Wait until we have joined the p2p network
+		s.p2p.BlockUntilJoined()
 		for {
 			time.Sleep(2 * time.Second)       // Sleep to give the controld a break
 			siteContent := s.getContentList() // Fetch what we have on disk in a format that's understood by the controld

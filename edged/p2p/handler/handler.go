@@ -24,6 +24,7 @@ func New(controldBase, joinIP, joinPort, contentPort string) *P2PHandler {
 		joinPort:     joinPort,
 		contentPort:  contentPort,
 		joined:       false,
+		joinChan:     make(chan struct{}),
 	}
 }
 
@@ -36,6 +37,7 @@ type P2PHandler struct {
 	controldBase string
 	connected    bool
 	ourIP        string
+	joinChan     chan struct{}
 }
 
 // Connect connects to the p2p newtwork and starts the heartbeat once connected.
@@ -45,17 +47,30 @@ func (p2p *P2PHandler) Connect() {
 		joinString := `{"ip":"` + p2p.joinIP + ":" + p2p.joinPort + `"}`
 		resp, err := p2p.post("/network/join", joinString)
 		if success, _ := getSuccess(resp, err); !success {
+			log.Warn().Err(err).Msg("Error joining p2p network, trying again in 10 seconds")
 			time.Sleep(10 * time.Second)
 			go p2p.Connect()
 			return
 		}
 		p2p.joined = true
+
+		// Give the p2p network a few seconds to connect, then say we're ready
+		go func() {
+			time.Sleep(5 * time.Second)
+			close(p2p.joinChan)
+		}()
 	}
 
 	// Once we have successfully connected, start the heartbeat
 	p2p.startHearbeat()
 }
 
+// BlockUntilJoined blocks until we have joined the network
+func (p2p *P2PHandler) BlockUntilJoined() {
+	<-p2p.joinChan
+}
+
+// LeaveIfJoined will call the leave endpoint if we have joined
 func (p2p *P2PHandler) LeaveIfJoined() {
 	if p2p.joined {
 		p2p.post("/network/leave", "")
@@ -96,7 +111,12 @@ func getSuccess(resp *http.Response, err error) (bool, []byte) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	success, err := jsonparser.GetBoolean(body, "success")
 	if !success || err != nil {
-		log.Debug().Msg("Success was false, this was the body: " + string(body))
+		url, err := resp.Location()
+		if err == nil {
+			log.Debug().Str("url", url.String()).Msg("Success was false, this was the body: " + string(body))
+		} else {
+			log.Debug().Str("url", "nil").Msg("Success was false, this was the body: " + string(body))
+		}
 		return false, []byte{}
 	}
 	return true, body

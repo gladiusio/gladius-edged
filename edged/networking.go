@@ -44,7 +44,7 @@ func Run() {
 	cs.Start()
 	defer cs.Stop()
 
-	log.Info().Msg("Started HTTP server.")
+	log.Info().Msg("Started HTTPS server.")
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
