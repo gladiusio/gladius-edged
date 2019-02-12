@@ -40,7 +40,7 @@ func Run() {
 	s := state.New(p2pHandler)
 
 	// Create a content server
-	cs := contserver.New(s, viper.GetString("ContentPort"))
+	cs := contserver.New(s, viper.GetString("ContentPort"), viper.GetString("HTTPPort"))
 	cs.Start()
 	defer cs.Stop()
 
