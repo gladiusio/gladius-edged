@@ -42,6 +42,7 @@ func buildOptions(base string) {
 	// Content
 	ConfigOption("ContentDirectory", filepath.Join(base, "content"))
 	ConfigOption("ContentPort", "8080")
+	ConfigOption("HTTPPort", "8081")
 
 	// P2P options
 	ConfigOption("P2PSeedNodeAddress", "165.227.16.209")
