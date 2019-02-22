@@ -4,6 +4,9 @@
 # What port to serve content on
 contentport = "8080"
 
+# HTTP port we use for not HTTPS content fetches between nodes
+httpport = "8081"
+
 # How to reach the network gateway
 networkgateayprotocol = "http"
 networkgatewayhostname = "localhost"

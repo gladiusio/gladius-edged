@@ -33,14 +33,15 @@ func Run() {
 	p2pHandler := handler.New(controldBase,
 		viper.GetString("P2PSeedNodeAddress"),
 		viper.GetString("P2PSeedNodePort"),
-		viper.GetString("ContentPort"))
+		viper.GetString("ContentPort"),
+		viper.GetString("HTTPPort"))
 	go p2pHandler.Connect()
 
 	// Create new thread safe state of the networkd
 	s := state.New(p2pHandler)
 
 	// Create a content server
-	cs := contserver.New(s, viper.GetString("ContentPort"))
+	cs := contserver.New(s, viper.GetString("ContentPort"), viper.GetString("HTTPPort"))
 	cs.Start()
 	defer cs.Stop()
 

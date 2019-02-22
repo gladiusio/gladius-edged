@@ -16,13 +16,14 @@ import (
 )
 
 // New returns a new P2PHandler object.
-func New(controldBase, joinIP, joinPort, contentPort string) *P2PHandler {
+func New(controldBase, joinIP, joinPort, contentPort, httpPort string) *P2PHandler {
 	return &P2PHandler{
 		controldBase: controldBase,
 		connected:    false,
 		joinIP:       joinIP,
 		joinPort:     joinPort,
 		contentPort:  contentPort,
+		httpPort:     httpPort,
 		joined:       false,
 		joinChan:     make(chan struct{}),
 	}
@@ -32,6 +33,7 @@ func New(controldBase, joinIP, joinPort, contentPort string) *P2PHandler {
 type P2PHandler struct {
 	joined       bool
 	contentPort  string
+	httpPort     string
 	joinIP       string
 	joinPort     string
 	controldBase string
@@ -97,6 +99,7 @@ func (p2p *P2PHandler) postIP() (bool, error) {
 	toUpdate := make(map[string]string)
 	toUpdate["ip_address"] = myIP
 	toUpdate["content_port"] = p2p.contentPort
+	toUpdate["http_port"] = p2p.httpPort
 	err = p2p.UpdateFields(toUpdate)
 	if err != nil {
 		return false, err

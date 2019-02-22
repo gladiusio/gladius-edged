@@ -14,15 +14,16 @@ import (
 // ContentServer is a server that serves the gladius content from the state
 type ContentServer struct {
 	running         bool
-	port            string
+	httpsPort       string
+	httpPort        string
 	contentListener net.Listener
 	tlsListener     net.Listener
 	state           *state.State
 }
 
 // New creates a new content server and starts it
-func New(state *state.State, port string) *ContentServer {
-	cs := &ContentServer{state: state, running: false, port: port}
+func New(state *state.State, httpsPort, httpPort string) *ContentServer {
+	cs := &ContentServer{state: state, running: false, httpsPort: httpsPort, httpPort: httpPort}
 	cs.Start()
 	return cs
 }
@@ -50,7 +51,7 @@ func (cs *ContentServer) Start() {
 		}
 
 		config := &tls.Config{Certificates: []tls.Certificate{cer}}
-		cs.tlsListener, err = tls.Listen("tcp", ":"+cs.port, config)
+		cs.tlsListener, err = tls.Listen("tcp", ":"+cs.httpsPort, config)
 		if err != nil {
 			log.Fatal().Err(err).Msg("Error starting TLS server on address")
 		}
@@ -58,6 +59,17 @@ func (cs *ContentServer) Start() {
 		// Listen for http over tls connection
 		tlsServer := fasthttp.Server{Handler: requestHandler(cs.state)}
 		go tlsServer.Serve(cs.tlsListener)
+
+		// Listen on http
+		cs.contentListener, err = net.Listen("tcp", ":"+cs.httpPort)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Error starting HTTP server on address")
+		}
+		// Create a content server
+		server := fasthttp.Server{Handler: requestHandler(cs.state)}
+
+		// Serve the content
+		go server.Serve(cs.contentListener)
 
 		cs.running = true
 	}
