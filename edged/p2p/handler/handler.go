@@ -106,6 +106,7 @@ func (p2p *P2PHandler) postIP() (bool, error) {
 
 func getSuccess(resp *http.Response, err error) (bool, []byte) {
 	if err != nil {
+		log.Debug().Err(err).Msg("Request failed")
 		return false, []byte{}
 	}
 	body, _ := ioutil.ReadAll(resp.Body)
